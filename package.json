@@ -1,0 +1,15 @@
+{
+  "name": "sistema",
+  "version": "1.0.0",
+  "description": "> Una de las **dos líneas** del brief (§2). Esta línea responde **\"¿qué es la herramienta y sobre qué opera?\"**: su estructura y su sistema de contexto operacional. La otra línea (cómo la construimos) vive en [`../desarrollo/`](../desarrollo/).",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.61.0"
+  }
+}

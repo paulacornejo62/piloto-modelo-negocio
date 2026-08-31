@@ -1,0 +1,28 @@
+# Dependencias — se reinstalan con setup/setup.sh
+node_modules/
+.venv/
+package-lock.json
+
+# Datos de casos reales (confidencial) — nunca a git
+proyectos/*
+!proyectos/README.md
+
+# Cache de Python
+__pycache__/
+*.pyc
+
+# Navegador (Playwright) y temporales
+.playwright-mcp/
+
+# Binarios sueltos
+*.pdf
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.ppt
+*.pptx
+*.zip
+*.rar
+
+.DS_Store

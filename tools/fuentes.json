@@ -1,0 +1,24 @@
+{
+  "_descripcion": "Registro ÚNICO de fuentes de consulta del estado del arte (papers/patentes). Fácil de manejar: para sumar una fuente, agrega una entrada aquí. El Deep Research recorre las fuentes con estado 'activo'/'parcial' y declara honestamente la cobertura de cada una.",
+  "_como_agregar": "Copia una entrada y completa id/nombre/tipo/estado/como. Si es tipo 'api' o 'mcp', configúrala además en sistema/.mcp.json (o como variable de entorno) y cambia su estado a 'activo'. Las del equipo GT (catálogo) están en desarrollo/contexto/resumenes/ley-id-metodologia/estado-del-arte.md.",
+  "papers": [
+    {"id": "pmc", "nombre": "PubMed Central (PMC)", "tipo": "web", "estado": "activo", "como": "WebFetch sobre pmc.ncbi.nlm.nih.gov/articles/PMC<ID>/", "nota": "FULL-TEXT open access — el caballo de batalla para papers; da profundidad_lectura=full-text"},
+    {"id": "europepmc", "nombre": "Europe PMC", "tipo": "web", "estado": "activo", "como": "WebFetch/WebSearch sobre europepmc.org", "nota": "full-text open access + abstracts; alternativa a PMC"},
+    {"id": "open_access", "nombre": "Revistas open access (PLOS, Frontiers, MDPI…)", "tipo": "web", "estado": "activo", "como": "WebFetch a la URL del artículo", "nota": "full-text directo cuando la revista es OA"},
+    {"id": "google_scholar", "nombre": "Google Académico", "tipo": "navegador", "estado": "intermitente", "como": "node tools/browse.mjs scholar \"<query>\"", "nota": "puede bloquear bots (unusual traffic)"},
+    {"id": "pubmed", "nombre": "PubMed", "tipo": "web", "estado": "activo", "como": "WebFetch sobre pubmed.ncbi.nlm.nih.gov/<PMID>/", "nota": "abstracts + metadata; si hay PMC<ID>, ir a PMC por el full-text"},
+    {"id": "ieee", "nombre": "IEEE Xplore", "tipo": "web", "estado": "parcial", "como": "WebSearch site:ieee.org", "nota": "full-text tras paywall"},
+    {"id": "sciencedirect", "nombre": "ScienceDirect", "tipo": "web", "estado": "parcial", "como": "WebSearch site:sciencedirect.com", "nota": "403/paywall; metadata indexada"},
+    {"id": "springer", "nombre": "Springer Nature Link", "tipo": "web", "estado": "parcial", "como": "WebSearch site:link.springer.com"},
+    {"id": "exa", "nombre": "Exa", "tipo": "mcp", "estado": "requiere_key", "como": "MCP Exa en sistema/.mcp.json (EXA_API_KEY)", "nota": "búsqueda semántica + texto completo"},
+    {"id": "semantic_scholar", "nombre": "Semantic Scholar", "tipo": "api", "estado": "requiere_key", "como": "API api.semanticscholar.org (S2_API_KEY; hay tier público con límite)", "nota": "grafo de citas, gratis"}
+  ],
+  "patentes": [
+    {"id": "google_patents", "nombre": "Google Patents", "tipo": "navegador", "estado": "activo", "como": "node tools/browse.mjs gp \"<query>\" [PAIS]", "nota": "MOTOR PRIMARIO; agrega familias EP/WO/US/CN/CL"},
+    {"id": "epo_ops", "nombre": "EPO Open Patent Services", "tipo": "mcp", "estado": "requiere_key", "como": "MCP/REST OPS en sistema/.mcp.json (OPS_KEY; registro OAuth gratuito)", "nota": "patentes globales oficiales — cierra Espacenet de forma legítima"},
+    {"id": "espacenet", "nombre": "Espacenet (EPO)", "tipo": "navegador", "estado": "bloqueado", "como": "node tools/browse.mjs espacenet \"<query>\"", "nota": "Cloudflare; usar EPO OPS"},
+    {"id": "wipo_patentscope", "nombre": "WIPO PatentScope", "tipo": "navegador", "estado": "bloqueado", "como": "node tools/browse.mjs patentscope \"<query>\""},
+    {"id": "lens", "nombre": "Lens.org", "tipo": "navegador", "estado": "parcial", "nota": "carga, pero requiere sesión para resultados"},
+    {"id": "inapi", "nombre": "INAPI (Chile)", "tipo": "manual", "estado": "manual", "nota": "formulario ASP.NET; búsqueda manual para FTO de patentes chilenas"}
+  ]
+}

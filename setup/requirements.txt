@@ -1,0 +1,8 @@
+# Dependencias Python del sistema (parte determinista).
+jsonschema>=4.0      # validación del expediente contra el schema (render.py)
+openpyxl>=3.1        # ingesta de planillas .xlsx
+python-docx>=1.1     # ingesta de .docx
+python-pptx>=0.6     # ingesta de .pptx (flujos del equipo)
+pypdf>=4.0           # ingesta de .pdf nativos
+# Nota: pdftotext (PDFs escaneados / mejor extracción) viene de poppler, binario de sistema:
+#   macOS: brew install poppler   ·   Debian/Ubuntu: apt install poppler-utils
