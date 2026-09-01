@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "expediente.schema.json",
-  "title": "Expediente de postulación (estado del proyecto)",
-  "description": "Contrato de datos que el orquestador hereda entre pasos. v1 = esqueleto caminante (EVAL_P1 y EVAL_P2). Se ampliará con EVAL_P3..P5 y FORM_W1..W5.",
+  "title": "Expediente de un caso de modelo de negocio (estado del proyecto)",
+  "description": "Contrato de datos que el orquestador hereda entre pasos. Piloto: construir el modelo de negocio de un cliente y redactar las secciones de mercado / modelo / escalamiento del formulario del subsidio CORFO elegido. Fase 1 (perfil_comercial -> investigacion_mercado -> supuestos_modelo -> modelo_negocio -> revision_viabilidad) + Fase 2 (narrativa -> formulario_oficial -> plan_escalamiento -> impacto_continuidad -> qa_entrega). Los pasos siguen numerados EVAL_P1..P5 / FORM_W1..W5 en meta.paso_actual para quedar alineados con los nombres de los skills (mn-eval-*, mn-form-*).",
   "type": "object",
   "required": ["meta"],
   "properties": {
@@ -10,25 +10,31 @@
       "type": "object",
       "required": ["tenant", "paso_actual"],
       "properties": {
-        "tenant": { "type": "string", "description": "Identificador de la postulación (carpeta en proyectos/)" },
+        "tenant": { "type": "string", "description": "Identificador del caso (carpeta en proyectos/)" },
         "creado": { "type": "string", "description": "Fecha ISO (la inyecta el orquestador)" },
         "actualizado": { "type": "string" },
-        "tipo_proyecto": { "type": "string", "description": "Tipo de proyecto, si se sabe a priori (p.ej. desarrollo de producto, mejora de proceso). Capturado al crear el tenant." },
-        "drive_carpeta": { "type": "string", "description": "Id de la carpeta de Drive del cliente/proyecto, vinculada al inicio (tools/postulacion.py vincular). Raíz donde sync-drive crea el árbol de postulación y sube los documentos." },
-        "instrumento_objetivo": { "type": "string", "description": "Fondo/instrumento objetivo si se sabe a priori: Ley I+D | Crea y Valida | Consolida y Expande | Capital Humano | Innova Alta Tecnología | por definir." },
+        "cliente_razon_social": { "type": "string" },
+        "tipo_negocio": { "type": "string", "description": "Naturaleza del negocio, si se sabe a priori: p.ej. software/SaaS, hardware, servicios, marketplace, deep tech, manufactura. Ajusta qué umbrales de unit economics son razonables (SaaS != hardware != servicios)." },
+        "instrumento_objetivo": {
+          "type": "string",
+          "enum": ["Crea y Valida", "Innova Alta Tecnología", "Consolida y Expande", "Capital Humano", "por definir"],
+          "description": "Fondo CORFO al que se postula. Se fija al crear el caso; el flujo NO elige fondo."
+        },
+        "horizonte_proyeccion_anios": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Horizonte de la proyeccion financiera. Se define al empezar a construir el modelo, segun el fondo y el caso (tip. 3-5)." },
+        "drive_carpeta": { "type": "string", "description": "Id de la carpeta de Drive del cliente, vinculada al inicio (tools/postulacion.py vincular). Raiz donde sync-drive espeja los entregables del modelo de negocio." },
         "paso_actual": {
           "type": "string",
-          "enum": ["INICIO", "EVAL_P1", "EVAL_P2", "EVAL_P3", "EVAL_P4", "EVAL_P5", "GATE", "PERFIL", "FORM_W1", "FORM_W2", "FORM_W3", "FORM_W4", "FORM_W5", "ENVIADO"],
-          "description": "Último paso completado; el orquestador decide el siguiente."
+          "enum": ["INICIO", "EVAL_P1", "EVAL_P2", "EVAL_P3", "EVAL_P4", "EVAL_P5", "GATE", "PERFIL", "FORM_W1", "FORM_W2", "FORM_W3", "FORM_W4", "FORM_W5", "ENTREGADO"],
+          "description": "Ultimo paso completado; el orquestador decide el siguiente. EVAL_P* = Fase 1 (construccion del modelo); FORM_W* = Fase 2 (redaccion); PERFIL = Fase 1 CORFO (Perfil de Proyecto) cuando el fondo lo exige."
         },
         "aprobaciones": {
           "type": "array",
-          "description": "Registro de gates humanos: cada aprobación explícita del consultor antes de cruzar un gate. El orquestador no avanza un gate sin registrar aquí.",
+          "description": "Registro de gates humanos: cada aprobacion explicita del consultor antes de cruzar un gate. El orquestador no avanza un gate sin registrar aqui.",
           "items": {
             "type": "object",
             "required": ["gate", "aprobado_por", "fecha"],
             "properties": {
-              "gate": { "type": "string", "description": "perfil (post EVAL_P1) | caso (post EVAL_P4) | comite (EVAL_P5) | envio (pre FORM_W5)" },
+              "gate": { "type": "string", "description": "perfil (post EVAL_P1) | modelo (post EVAL_P4) | revision (EVAL_P5) | perfil_corfo (PERFIL) | entrega (pre FORM_W5)" },
               "aprobado_por": { "type": "string" },
               "fecha": { "type": "string" },
               "nota": { "type": "string" }
@@ -37,30 +43,30 @@
         },
         "cifras_declaradas": {
           "type": "array",
-          "description": "C5 · Cifras que el cliente declara a lo largo del expediente (tamaño de flota, ahorro, unidades convertibles, etc.), cada una con su fuente. motor-reglas/reglas.py coherencia_cifras_cliente() cruza las de un mismo concepto y marca inconsistencias como alerta (no se silencian). render --validar lo corre.",
+          "description": "Cifras que el cliente declara a lo largo del expediente (nro de clientes actuales, precio de venta, ticket promedio, volumen, ahorro que promete su producto, etc.), cada una con su fuente. motor-reglas/reglas.py coherencia_cifras_cliente() cruza las de un mismo concepto y marca inconsistencias como alerta (no se silencian). render --validar lo corre.",
           "items": {
             "type": "object",
             "required": ["concepto", "valor", "fuente"],
             "properties": {
-              "concepto": { "type": "string", "description": "Nombre normalizado del dato (p.ej. 'flota', 'ahorro_energetico')" },
-              "valor": { "description": "Valor declarado (número o texto)" },
+              "concepto": { "type": "string", "description": "Nombre normalizado del dato (p.ej. 'clientes_actuales', 'precio_unitario', 'ticket_promedio')" },
+              "valor": { "description": "Valor declarado (numero o texto)" },
               "unidad": { "type": "string" },
-              "fuente": { "type": "string", "description": "De dónde salió: reunion-1, propuesta.pdf, eval_p3, etc." }
+              "fuente": { "type": "string", "description": "De donde salio: reunion-1, estados-financieros.pdf, eval_p3, etc." }
             }
           }
         }
       }
     },
 
-    "eval_p1": {
+    "perfil_comercial": {
       "type": "object",
-      "description": "Perfil Preliminar (salida de EVAL_P1 — Reunión #1).",
-      "required": ["empresa_razon_social", "empresa_tamano", "proyecto_presupuesto_estimado", "problema_oportunidad_declarado"],
+      "description": "Perfil comercial del cliente (salida de EVAL_P1 - Reunion #1). Lo escribe mn-eval-reunion-1.",
+      "required": ["cliente_razon_social", "producto_o_servicio", "problema_u_oportunidad", "resultado_negocio_esperado"],
       "properties": {
-        "empresa_razon_social": { "type": "string" },
-        "empresa_tamano": { "type": "string", "enum": ["Micro", "Pequeña", "Mediana", "Grande"] },
-        "empresa_tamano_confirmado": { "type": "boolean", "description": "true solo si el cliente confirmó el tamaño (o es claramente determinable). Si false/ausente es un SUPUESTO: determina el % de cofinanciamiento y debe confirmarse." },
-        "empresa_fecha_inicio_actividades": { "type": "string", "description": "DD/MM/AAAA o ISO" },
+        "cliente_razon_social": { "type": "string" },
+        "cliente_tamano": { "type": "string", "enum": ["Micro", "Pequeña", "Mediana", "Grande"], "description": "Tamano de la empresa. Afecta el % de cofinanciamiento CORFO y algunos requisitos; si no se confirma, es supuesto." },
+        "cliente_tamano_confirmado": { "type": "boolean" },
+        "cliente_fecha_inicio_actividades": { "type": "string", "description": "DD/MM/AAAA o ISO. Algunos fondos exigen antiguedad minima." },
         "contacto_clave": {
           "type": "object",
           "properties": {
@@ -69,44 +75,62 @@
             "email": { "type": "string" }
           }
         },
-        "proyecto_presupuesto_estimado": { "type": "number", "description": "CLP" },
-        "problema_oportunidad_declarado": { "type": "string" },
-        "resultado_esperado_negocio": { "type": "string", "description": "El resultado de negocio/técnico esperado. NO metadata de tramitación (fechas límite de Corfo, timing del beneficio tributario): eso no es relevante para la evaluación. El fondo objetivo (p.ej. Ley I+D) va en meta.instrumento_objetivo." },
+        "producto_o_servicio": { "type": "string", "description": "Que vende o pretende vender el cliente, en lenguaje llano." },
+        "estado_desarrollo": { "type": "string", "description": "En que punto esta: idea, prototipo, piloto con clientes, ya vendiendo. Condiciona que fondo aplica y el horizonte de proyeccion." },
+        "clientes_actuales": { "type": "string", "description": "A quien le vende HOY (segmentos, nombres si los hay, nro de clientes, ingresos actuales si los declara)." },
+        "canal_actual": { "type": "string", "description": "Como llega hoy a sus clientes (venta directa, distribuidores, online, licitaciones...)." },
+        "problema_u_oportunidad": { "type": "string", "description": "El problema de mercado o la oportunidad que el cliente quiere capturar con este proyecto." },
+        "resultado_negocio_esperado": { "type": "string", "description": "El resultado comercial esperado (entrar a un mercado, escalar ventas, nuevo segmento, nuevo producto). NO metadata de tramitacion (fechas de Corfo, timing). El fondo objetivo va en meta.instrumento_objetivo." },
+        "presupuesto_estimado_clp": { "type": "number", "description": "CLP. Presupuesto del proyecto que se postula." },
         "historia_previa": {
           "type": "object",
-          "description": "C4 · Antecedentes del caso ANTES de esta postulación. No tratar el caso como 'primera postulación sin historia': el alcance descartado suele ser donde vivía el I+D. Se puebla desde el buzón entradas/ (prevaluaciones, correos, propuestas previas).",
+          "description": "Antecedentes ANTES de este proyecto. El caso casi nunca parte de cero. Se puebla desde el buzon entradas/ (postulaciones previas, planes de negocio anteriores, estudios de mercado encargados).",
           "properties": {
-            "postulaciones_o_evaluaciones_previas": { "type": "string", "description": "Prevaluaciones, postulaciones anteriores (a este u otro fondo), su resultado y por qué." },
-            "alcance_original": { "type": "string", "description": "Alcance/idea original antes de estrecharse." },
-            "alcance_descartado_y_por_que": { "type": "string", "description": "Qué se sacó del alcance y la razón (costo, riesgo, 'no era financiable'…). Reconciliar: a veces lo descartado era el núcleo de I+D." }
+            "postulaciones_o_evaluaciones_previas": { "type": "string", "description": "Postulaciones anteriores (a este u otro fondo), su resultado y por que." },
+            "modelo_negocio_actual": { "type": "string", "description": "Como gana plata hoy el cliente (si ya opera)." },
+            "intentos_previos_y_resultado": { "type": "string", "description": "Intentos anteriores de entrar a este mercado / escalar, y por que no resultaron." }
           }
         }
       }
     },
 
-    "eval_p2": {
+    "investigacion_mercado": {
       "type": "object",
-      "description": "Minuta de Investigación v1 (salida de EVAL_P2 — Deep Research #1).",
-      "required": ["hipotesis_preliminar_o_objetivo_general", "estado_del_arte_v1", "cuestionario_indagacion"],
+      "description": "Investigacion de mercado (salida de EVAL_P2 - Deep Research + QA). La escribe mn-eval-deep-research-1; mn-qa-veracidad verifica cada dato de forma independiente.",
+      "required": ["sintesis_mercado", "hallazgos", "cobertura_busqueda"],
       "properties": {
-        "hipotesis_preliminar_o_objetivo_general": { "type": "string" },
-        "sintesis_estado_del_arte": { "type": "string", "maxLength": 1500, "description": "Síntesis NARRATIVA del estado del arte para lectura rápida (va ARRIBA del detalle, en 'En breve'): en lenguaje llano, qué ya está resuelto/disponible, qué sigue abierto, y dónde está la brecha que sostiene el proyecto. 3-6 frases; sin jerga de íconos. El render la complementa con un resumen automático de conteos/evidencia." },
-        "estado_del_arte_v1": {
+        "sintesis_mercado": { "type": "string", "maxLength": 1500, "description": "Sintesis NARRATIVA para lectura rapida (va en 'En breve', arriba del detalle): tamano y dinamica del mercado, quienes son los actores, donde estan los precios, que tendencia lo mueve y donde esta el espacio para el cliente. 3-6 frases, lenguaje llano." },
+        "tamano_mercado": {
+          "type": "object",
+          "description": "TAM/SAM/SOM. Cada cifra con su fuente y metodo. El motor recalcula coherencia (SAM <= TAM, SOM <= SAM) y la proyeccion los usa.",
+          "properties": {
+            "tam_clp": { "type": "number", "description": "Mercado total direccionable (CLP/anio)." },
+            "sam_clp": { "type": "number", "description": "Mercado servible (el segmento y geografia que el cliente puede atender)." },
+            "som_clp": { "type": "number", "description": "Mercado obtenible en el horizonte (la porcion realista de SAM)." },
+            "cagr_pct": { "type": "number", "description": "Tasa de crecimiento anual compuesta del mercado (%)." },
+            "metodo": { "type": "string", "enum": ["top-down", "bottom-up", "ambos"], "description": "Como se estimo. bottom-up (nro de clientes potenciales x ticket) es mas defendible ante un evaluador." },
+            "geografia": { "type": "string", "description": "Alcance geografico de las cifras (Chile, LATAM, global). Un dato global no dimensiona un mercado nacional." },
+            "anio_referencia": { "type": "string" },
+            "fuentes": { "type": "array", "items": { "type": "string" }, "description": "Referencias verificables (informe + URL, filing, articulo con medio y fecha)." },
+            "estado_evidencia": { "type": "string", "enum": ["verificado", "parcial", "no_verificado"] }
+          }
+        },
+        "hallazgos": {
           "type": "array",
-          "description": "Competidores, patentes o papers relevantes. Cada hallazgo lleva su evidencia y estado de verificación (control de veracidad).",
+          "description": "Datos de mercado individuales: competidores, sustitutos, precios de referencia, benchmarks de industria (margenes, CAC, ciclo de venta), regulacion, tendencias. Cada uno con su evidencia y estado de verificacion.",
           "items": {
             "type": "object",
-            "required": ["tipo", "motor", "referencia", "hallazgo", "estado_evidencia"],
+            "required": ["tipo", "fuente", "referencia", "hallazgo", "estado_evidencia"],
             "properties": {
-              "tipo": { "type": "string", "enum": ["paper", "patente", "competidor", "producto"] },
-              "motor": { "type": "string", "description": "Fuente/buscador de origen (IEEE, PubMed, Espacenet, INAPI, etc.)" },
-              "referencia": { "type": "string", "description": "Cita / URL / identificador verificable" },
-              "hallazgo": { "type": "string" },
-              "cita_textual": { "type": "string", "description": "Cita textual o localizador exacto que respalda el hallazgo (apoya el QA de veracidad)" },
+              "tipo": { "type": "string", "enum": ["competidor", "sustituto", "precio_referencia", "benchmark_industria", "tamano_mercado", "tendencia", "regulacion", "cliente_potencial"] },
+              "fuente": { "type": "string", "description": "De donde salio (nombre del informe, medio, base de datos, sitio del competidor)." },
+              "referencia": { "type": "string", "description": "URL / identificador verificable." },
+              "hallazgo": { "type": "string", "description": "El dato, en una frase. Si es un numero, con su unidad y fecha." },
+              "cita_textual": { "type": "string", "description": "Cita o localizador exacto que respalda el hallazgo (apoya el QA)." },
               "estado_evidencia": {
                 "type": "string",
                 "enum": ["verificado", "parcial", "no_verificado"],
-                "description": "verificado = se abrió la fuente y el hallazgo coincide; parcial = solo abstract/metadata accesible (full-text en paywall); no_verificado = referenciado pero no se pudo abrir/confirmar (tentativo)"
+                "description": "verificado = se abrio la fuente y el dato coincide; parcial = solo resumen/metadata accesible; no_verificado = referenciado pero no se pudo abrir/confirmar (tentativo)"
               },
               "verificacion_qa": {
                 "type": "string",
@@ -117,28 +141,43 @@
             }
           }
         },
-        "cobertura_busqueda": {
+        "competidores": {
           "type": "array",
-          "description": "Honestidad de cobertura: estado de cada fuente mandatoria consultada. Obligatorio para no ocultar lagunas.",
+          "description": "Perfil de los competidores / sustitutos relevantes (derivado de hallazgos verificados).",
           "items": {
             "type": "object",
-            "required": ["motor", "estado"],
+            "required": ["nombre"],
             "properties": {
-              "motor": { "type": "string" },
+              "nombre": { "type": "string" },
+              "que_ofrece": { "type": "string" },
+              "precio_aprox": { "type": "string" },
+              "fortaleza": { "type": "string" },
+              "debilidad": { "type": "string" },
+              "estado_evidencia": { "type": "string", "enum": ["verificado", "parcial", "no_verificado"] }
+            }
+          }
+        },
+        "cobertura_busqueda": {
+          "type": "array",
+          "description": "Honestidad de cobertura: estado de cada fuente consultada. Obligatorio para no ocultar lagunas.",
+          "items": {
+            "type": "object",
+            "required": ["fuente", "estado"],
+            "properties": {
+              "fuente": { "type": "string" },
               "estado": {
                 "type": "string",
                 "enum": ["cubierto", "sin_resultados", "acceso_parcial", "no_accesible"],
-                "description": "cubierto = se buscó y hubo resultados; sin_resultados = se buscó, nada relevante; acceso_parcial = solo metadata/paywall; no_accesible = la herramienta no pudo entrar al motor"
+                "description": "cubierto = se busco y hubo resultados; sin_resultados = se busco, nada relevante; acceso_parcial = solo metadata/paywall; no_accesible = la herramienta no pudo entrar a la fuente"
               },
               "nota": { "type": "string" }
             }
           }
         },
-        "desafios_tecnicos_identificados_v1": { "type": "string", "description": "Desafíos/incertidumbres técnicos, con FACT-CHECK crítico: para cada uno, si es realmente un desafío VIGENTE (no resuelto o con escasa solución) o ya está resuelto. Un desafío ya resuelto NO sustenta I+D (Frascati)." },
-        "cuestionario_indagacion": {
+        "preguntas_para_reunion_2": {
           "type": "array",
-          "description": "POOL AMPLIO de preguntas para Reunión #2 (el consultor selecciona las mejores). Dos categorías: 'objetivo_es_id' (indagan si el proyecto es I+D o no, en torno al objetivo/hipótesis) y 'estado_arte_desafios' (técnicas, sobre los desafíos y cómo se atienden).",
-          "minItems": 8,
+          "description": "POOL de preguntas para validar con el cliente en la Reunion #2 (segmentos reales, precio que el mercado paga, costo de adquirir un cliente, supuestos del modelo). El consultor elige las mejores.",
+          "minItems": 5,
           "items": {
             "oneOf": [
               { "type": "string" },
@@ -146,7 +185,7 @@
                 "type": "object",
                 "required": ["pregunta"],
                 "properties": {
-                  "categoria": { "type": "string", "enum": ["objetivo_es_id", "estado_arte_desafios"] },
+                  "categoria": { "type": "string", "description": "p.ej. 'segmento', 'pricing', 'costos', 'canal', 'ejecucion'" },
                   "pregunta": { "type": "string" }
                 }
               }
@@ -156,292 +195,411 @@
       }
     },
 
-    "eval_p3": {
+    "supuestos_modelo": {
       "type": "object",
-      "description": "Perfil del proyecto actualizado (salida de EVAL_P3 — Reunión #2).",
-      "required": ["hipotesis_objetivo_refinado", "perfil_tecnico_proyecto_v2", "trl_declarado"],
+      "description": "Supuestos del modelo validados con el cliente (salida de EVAL_P3 - Reunion #2). Los escribe mn-eval-reunion-2. Alimentan directamente modelo_negocio y el motor de reglas.",
+      "required": ["segmentos", "propuesta_valor", "estructura_ingresos", "estructura_costos"],
       "properties": {
-        "hipotesis_objetivo_refinado": { "type": "string" },
         "respuestas_cuestionario": {
           "type": "array",
-          "items": { "type": "object", "properties": {
-            "pregunta": { "type": "string" }, "respuesta": { "type": "string" } } }
+          "items": { "type": "object", "properties": { "pregunta": { "type": "string" }, "respuesta": { "type": "string" } } }
         },
-        "perfil_tecnico_proyecto_v2": { "type": "string" },
-        "trl_declarado": { "type": "integer", "minimum": 1, "maximum": 9,
-          "description": "TRL declarado por el cliente; alimenta el motor de reglas (elegibilidad)." },
-        "modelo_negocio_decision": {
+        "segmentos": {
+          "type": "array",
+          "description": "Segmentos de cliente priorizados con el cliente.",
+          "items": {
+            "type": "object",
+            "required": ["nombre"],
+            "properties": {
+              "nombre": { "type": "string" },
+              "descripcion": { "type": "string" },
+              "tamano_estimado": { "type": "string", "description": "Nro de clientes potenciales en el segmento (con fuente si viene de la investigacion)." },
+              "prioridad": { "type": "string", "enum": ["primario", "secundario", "futuro"] }
+            }
+          }
+        },
+        "propuesta_valor": {
+          "type": "array",
+          "description": "Propuesta de valor por segmento primario.",
+          "items": {
+            "type": "object",
+            "required": ["segmento", "propuesta"],
+            "properties": {
+              "segmento": { "type": "string" },
+              "propuesta": { "type": "string" },
+              "dolor_que_resuelve": { "type": "string" },
+              "alternativa_actual_del_cliente": { "type": "string", "description": "Que hace hoy ese cliente para resolver el problema (el verdadero competidor suele ser 'no hacer nada' o una planilla)." }
+            }
+          }
+        },
+        "canales": { "type": "string", "description": "Como se llega y se vende a cada segmento (adquisicion, entrega, postventa)." },
+        "relacion_clientes": { "type": "string", "description": "Tipo de relacion (autoservicio, soporte dedicado, comunidad, contrato...)." },
+        "estructura_ingresos": {
+          "type": "array",
+          "description": "Fuentes de ingreso del modelo. Cada una con su forma de cobro y precio.",
+          "items": {
+            "type": "object",
+            "required": ["nombre", "tipo"],
+            "properties": {
+              "nombre": { "type": "string" },
+              "tipo": { "type": "string", "enum": ["suscripcion", "transaccion", "licencia", "servicio", "venta_unitaria", "comision", "otro"] },
+              "precio": { "type": "number", "description": "Precio (CLP). Marca si es supuesto en supuestos[]." },
+              "unidad": { "type": "string", "description": "Por que se cobra (por usuario/mes, por transaccion, por unidad, por proyecto)." },
+              "recurrencia_meses": { "type": "number", "description": "Cada cuantos meses se repite el ingreso de un mismo cliente (0/ausente = pago unico)." }
+            }
+          }
+        },
+        "estructura_costos": {
+          "type": "array",
+          "description": "Costos del modelo, clasificados en fijo/variable (el motor los necesita para margen de contribucion y punto de equilibrio).",
+          "items": {
+            "type": "object",
+            "required": ["concepto", "tipo"],
+            "properties": {
+              "concepto": { "type": "string" },
+              "tipo": { "type": "string", "enum": ["fijo", "variable"] },
+              "monto": { "type": "number", "description": "CLP. Si es variable: costo por unidad vendida. Si es fijo: monto mensual." },
+              "unidad": { "type": "string", "description": "'por unidad vendida' | 'mensual' | ..." }
+            }
+          }
+        },
+        "costo_adquisicion_cliente": {
           "type": "object",
-          "description": "C2 · Modelo de negocio y cadena de decisión. No basta evaluar lo técnico: hay que saber si el cliente PUEDE implementar el cambio. Precondición del comité (sin entender el negocio no hay resolución). Se levanta en Reunión #1/#2.",
+          "description": "CAC: cuanto cuesta conseguir un cliente nuevo (marketing + ventas / nro de clientes ganados).",
           "properties": {
-            "propiedad_activos": { "type": "string", "description": "¿De quién son los activos que se intervienen? (propios, arrendados, leasing, de un tercero)." },
-            "autoridad_decision": { "type": "string", "description": "¿Quién decide? ¿El proponente controla lo que propone?" },
-            "dinamicas_proveedor_leasing": { "type": "string", "description": "Dinámicas de proveedor/arrendador/leasing que condicionan el cambio." },
-            "barreras_contractuales": { "type": "string", "description": "Barreras contractuales (p.ej. garantías: modificar un activo arrendado puede anular su garantía)." },
-            "barrera_como_vacio_id": { "type": "string", "description": "Nota clave: una barrera comercial puede SER el propio vacío de I+D (p.ej. un estudio de no-daño que habilite la modificación sin perder garantía). Marcar si aplica." }
+            "valor_clp": { "type": "number" },
+            "base": { "type": "string", "description": "Como se estimo (dato del cliente, benchmark de industria, supuesto)." },
+            "estado_evidencia": { "type": "string", "enum": ["verificado", "supuesto", "no_verificado"] }
+          }
+        },
+        "recursos_y_socios_clave": { "type": "string", "description": "Recursos y socios sin los cuales el modelo no funciona." },
+        "capacidad_ejecucion": { "type": "string", "description": "El cliente PUEDE ejecutar este modelo? Quien decide, que le falta (capital, equipo, permisos, acuerdos). Una barrera de ejecucion puede ser justo lo que el subsidio viene a resolver." },
+        "supuestos": {
+          "type": "array",
+          "description": "TODOS los supuestos del modelo, consolidados, cada uno marcado si esta confirmado por el cliente o pendiente. Feed del motor y del QA de coherencia; los no confirmados se arrastran a impacto_continuidad.supuestos_a_confirmar.",
+          "items": {
+            "type": "object",
+            "required": ["supuesto", "confirmado"],
+            "properties": {
+              "supuesto": { "type": "string" },
+              "valor": { "description": "Valor asumido (numero o texto)." },
+              "confirmado": { "type": "boolean", "description": "true = el cliente o una fuente lo confirmo; false = pendiente, va como '[POR CONFIRMAR]'." },
+              "impacto_si_falla": { "type": "string", "description": "Que se cae del modelo si el supuesto resulta falso." }
+            }
           }
         }
       }
     },
 
-    "eval_p4": {
+    "modelo_negocio": {
       "type": "object",
-      "description": "Preparar el Caso (EVAL_P4: Deep Research #2 + Frascati + perfil de subsidios + láminas).",
-      "required": ["objetivo_general_smart", "frascati", "perfil_subsidios"],
+      "description": "El modelo de negocio construido (salida de EVAL_P4). Lo arma mn-eval-preparar-caso: consolida el Canvas y prepara las ENTRADAS de unit economics, mercado y proyeccion; los campos CALCULADOS los llena motor-reglas/reglas.py (no se 'opinan').",
+      "required": ["canvas", "unit_economics", "proyeccion"],
       "properties": {
-        "estado_del_arte_especifico": { "type": "string" },
-        "desafios_tecnicos_consolidados": { "type": "string", "description": "Incertidumbres técnicas específicas no resueltas por el estado del arte." },
-        "perfil_tecnico_proyecto_v3": { "type": "string", "description": "Alcance técnico actualizado tras el Deep Research #2." },
-        "objetivo_general_smart": { "type": "string", "description": "Verbo + Qué + Métrica + Plazo. Hereda a FORM_W1 (objetivo_general_proyecto)." },
-        "frascati": {
+        "canvas": {
           "type": "object",
-          "required": ["componente_i", "componente_d", "cuadrante", "es_id", "justificacion"],
+          "description": "Business Model Canvas consolidado desde supuestos_modelo + investigacion_mercado.",
           "properties": {
-            "componente_i": { "type": "boolean" },
-            "componente_d": { "type": "boolean" },
-            "cuadrante": { "type": "string", "enum": ["I+D", "Solo I", "Solo D", "Sin I-D"] },
-            "es_id": { "type": "boolean" },
-            "es_id_defendible": { "type": "boolean", "description": "C1 · Lo calcula el motor: true solo si es_id Y todas las exclusiones fueron sorteadas con sustento. Un es_id que cae en una exclusión es un falso positivo." },
-            "justificacion": { "type": "string" },
-            "exclusiones_evaluadas": {
+            "segmentos_cliente": { "type": "string" },
+            "propuesta_valor": { "type": "string" },
+            "canales": { "type": "string" },
+            "relacion_clientes": { "type": "string" },
+            "fuentes_ingreso": { "type": "string" },
+            "recursos_clave": { "type": "string" },
+            "actividades_clave": { "type": "string" },
+            "socios_clave": { "type": "string" },
+            "estructura_costos": { "type": "string" }
+          }
+        },
+        "unit_economics": {
+          "type": "object",
+          "description": "ENTRADAS las pone el paso; SALIDAS (margen_*, ltv_*, payback_*, punto_equilibrio_*) las calcula el motor. Cada entrada con su origen y estado de evidencia via supuestos_modelo.",
+          "required": ["precio_unitario", "costo_variable_unitario", "costos_fijos_mensuales"],
+          "properties": {
+            "unidad_modelo": { "type": "string", "description": "Que es 'una unidad' en este modelo (un cliente/mes, una transaccion, un equipo vendido). Documenta la interpretacion de todo lo demas." },
+            "precio_unitario": { "type": "number", "description": "ENTRADA. Precio promedio de venta por unidad (segun unidad_modelo), CLP." },
+            "costo_variable_unitario": { "type": "number", "description": "ENTRADA. Costo que escala con cada unidad vendida, CLP." },
+            "costos_fijos_mensuales": { "type": "number", "description": "ENTRADA. Suma de costos fijos mensuales, CLP." },
+            "cac_clp": { "type": "number", "description": "ENTRADA. Costo de adquisicion de cliente (de supuestos_modelo.costo_adquisicion_cliente)." },
+            "vida_cliente_meses": { "type": "number", "description": "ENTRADA. Cuantos meses, en promedio, un cliente sigue pagando (para LTV). Pago unico -> 1." },
+            "margen_contribucion_unitario": { "type": "number", "description": "SALIDA (motor) = precio_unitario - costo_variable_unitario." },
+            "margen_contribucion_pct": { "type": "number", "description": "SALIDA (motor) = margen_contribucion_unitario / precio_unitario." },
+            "ltv_clp": { "type": "number", "description": "SALIDA (motor) = margen_contribucion_unitario x vida_cliente_meses (modelos recurrentes)." },
+            "ltv_cac_ratio": { "type": "number", "description": "SALIDA (motor) = ltv_clp / cac_clp. Referencia de industria ~ 3 (POR VALIDAR con ing. comercial)." },
+            "payback_cac_meses": { "type": "number", "description": "SALIDA (motor) = cac_clp / margen de contribucion mensual por cliente." },
+            "punto_equilibrio_unidades": { "type": "number", "description": "SALIDA (motor) = costos_fijos_mensuales / margen_contribucion_unitario." },
+            "punto_equilibrio_clp": { "type": "number", "description": "SALIDA (motor) = punto_equilibrio_unidades x precio_unitario." }
+          }
+        },
+        "proyeccion": {
+          "type": "object",
+          "description": "Proyeccion a meta.horizonte_proyeccion_anios. ENTRADAS: supuestos de crecimiento por escenario. SALIDA: la tabla anio a anio, la calcula el motor desde unit_economics + crecimiento.",
+          "required": ["horizonte_anios", "escenarios"],
+          "properties": {
+            "horizonte_anios": { "type": "integer" },
+            "escenarios": {
               "type": "array",
-              "description": "C1 · Prueba de exclusiones OBLIGATORIA antes de afirmar es_id (por defecto, no a pedido). Contrastar el caso contra cada no-elegible de la Ley I+D: adaptacion_rutinaria, ingenieria_estandar, adquisicion_puesta_en_marcha, validacion_medicion_comercial, novedad_solo_local. Cada componente I/D afirmado debe nombrar qué exclusión sortea, con sustento del estado del arte.",
-              "minItems": 5,
+              "minItems": 1,
+              "description": "Pesimista / base / optimista. Cada uno: los supuestos de crecimiento (ENTRADA) + la tabla anual (SALIDA del motor).",
               "items": {
                 "type": "object",
-                "required": ["exclusion", "veredicto", "sustento"],
+                "required": ["nombre", "supuestos_crecimiento"],
                 "properties": {
-                  "exclusion": { "type": "string", "enum": ["adaptacion_rutinaria", "ingenieria_estandar", "adquisicion_puesta_en_marcha", "validacion_medicion_comercial", "novedad_solo_local"] },
-                  "veredicto": { "type": "string", "enum": ["sorteada", "aplica", "pendiente"], "description": "sorteada = el caso NO cae aquí (con sustento); aplica = el caso CAE en esta exclusión (no es I+D por ese flanco); pendiente = falta indagar." },
-                  "sustento": { "type": "string", "description": "Por qué se sortea/aplica, anclado al estado del arte verificado. Obligatorio para que 'sorteada' cuente." }
+                  "nombre": { "type": "string", "enum": ["pesimista", "base", "optimista"] },
+                  "supuestos_crecimiento": { "type": "string", "description": "ENTRADA en texto: clientes/unidades iniciales, tasa de crecimiento, supuestos de churn/precio." },
+                  "unidades_ano_1": { "type": "number", "description": "ENTRADA: unidades vendidas el primer anio." },
+                  "crecimiento_anual_pct": { "type": "number", "description": "ENTRADA: % de crecimiento de unidades anio a anio." },
+                  "anios": {
+                    "type": "array",
+                    "description": "SALIDA (motor): una fila por anio.",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "anio": { "type": "integer" },
+                        "unidades": { "type": "number" },
+                        "ingresos_clp": { "type": "number" },
+                        "costos_clp": { "type": "number" },
+                        "resultado_clp": { "type": "number" }
+                      }
+                    }
+                  }
                 }
               }
             }
-          },
-          "description": "cuadrante/es_id/es_id_defendible se calculan con motor-reglas/reglas.py frascati(); no se 'opinan'. La prueba de exclusiones es por defecto (Frascati adversarial, C1)."
-        },
-        "reencuadre_elegibilidad": {
-          "type": "array",
-          "description": "C3 · Cuando es_id es débil: opciones para volver el caso elegible, A MODO DE SUGERENCIA. Son propuestas que el consultor y el cliente evalúan y pueden descartar; NO cambian el veredicto por sí solas ni se fuerzan. Coherente con C1: no fabricar elegibilidad para 'salvar' un caso que no es I+D. Si no hay camino honesto, dejar el array vacío y decirlo.",
-          "items": {
-            "type": "object",
-            "required": ["opcion", "descripcion"],
-            "properties": {
-              "opcion": { "type": "string", "description": "Título corto de la sugerencia." },
-              "tipo": { "type": "string", "enum": ["desarrollar_en_vez_de_comprar", "socio_academico", "estudio_financiable", "fase_2", "otro"], "description": "Familia del reencuadre (p.ej. apalancar con socio académico: estudios financiables por la propia ley)." },
-              "descripcion": { "type": "string" },
-              "es_sugerencia": { "type": "boolean", "const": true, "description": "Siempre true: marca explícita de que NO afecta el veredicto." }
-            }
           }
         },
-        "perfil_subsidios": {
-          "type": "array",
-          "description": "Alineación con instrumentos CORFO; elegibilidad y % vienen del motor de reglas.",
-          "items": { "type": "object",
-            "required": ["instrumento", "elegible", "alineacion"],
-            "properties": {
-              "instrumento": { "type": "string" },
-              "elegible": { "type": "boolean" },
-              "alineacion": { "type": "string", "enum": ["Bajo", "Mediano", "Alto"] },
-              "cofinanciamiento_pct": { "type": "number" },
-              "justificacion": { "type": "string" }
-            } }
+        "encaje_mercado": {
+          "type": "object",
+          "description": "Cruce del modelo con el mercado (investigacion_mercado.tamano_mercado). Lo calcula/observa el motor.",
+          "properties": {
+            "som_clp": { "type": "number", "description": "Mercado obtenible (heredado de investigacion_mercado)." },
+            "ingresos_ano_final_base_clp": { "type": "number", "description": "Ingresos del ultimo anio del escenario base." },
+            "penetracion_som_pct": { "type": "number", "description": "SALIDA (motor) = ingresos_ano_final_base / som. >100% = la proyeccion no cabe en el mercado estimado -> revisar." }
+          }
         }
       }
     },
 
-    "eval_p5": {
+    "revision_viabilidad": {
       "type": "object",
-      "description": "Acta de Comité y compuerta (EVAL_P5).",
-      "required": ["voto_comite", "compuerta"],
+      "description": "Revision del modelo y compuerta (salida de EVAL_P5). Los indicadores y la compuerta los calcula motor-reglas/reglas.py; los comentarios los pone la revision (consultor / par).",
+      "required": ["compuerta"],
       "properties": {
-        "voto_comite": { "type": "string", "enum": ["Aprobado I+D", "Rechazado I+D", "Condicionado a Ajustes", "Información Insuficiente"] },
-        "comentarios_tecnicos": { "type": "array", "items": { "type": "string" } },
-        "info_suficiente": { "type": "boolean", "description": "C6 · false = el comité no pudo resolver por entendimiento incompleto (típicamente del modelo de negocio, no del estado del arte) → compuerta DEVOLVER. Default true." },
-        "aplica_ley_id": { "type": "boolean", "description": "Estrategia: ¿se postula a Ley I+D?" },
-        "instrumento_corfo_seleccionado": { "type": "string" },
-        "enfoque_postulacion": { "type": "string", "description": "Cómo se abordará el desarrollo técnico en la formulación." },
-        "compuerta": { "type": "string", "enum": ["GO", "PIVOT", "NO-GO", "DEVOLVER"],
-          "description": "Calculada con motor-reglas/reglas.py compuerta(es_id, voto_comite, info_suficiente). DEVOLVER (C6) = volver al cliente por info insuficiente; NO es PIVOT (que vuelve al Deep Research)." }
-      }
-    },
-
-    "form_w1": {
-      "type": "object",
-      "description": "FORM_W1 — Arquitectura técnica (Sección 1 del formulario). objetivo_general_proyecto hereda de eval_p4.objetivo_general_smart.",
-      "required": ["titulo_proyecto", "resumen_proyecto", "contexto_tecnico_proyecto", "objetivo_general_proyecto", "clasificacion_actividades"],
-      "properties": {
-        "titulo_proyecto": { "type": "string", "maxLength": 100, "description": "Máx 100 caracteres (dato duro del formulario Ley I+D)." },
-        "resumen_proyecto": { "type": "string", "maxLength": 2000 },
-        "contexto_tecnico_proyecto": { "type": "string", "maxLength": 4000 },
-        "objetivo_general_proyecto": { "type": "string", "maxLength": 1000 },
-        "clasificacion_actividades": { "type": "string", "enum": ["Investigación", "Desarrollo Experimental", "Ambas"] }
-      }
-    },
-
-    "form_w2": {
-      "type": "object",
-      "description": "FORM_W2 — Redacción I+D. Ruta A (Investigación) y/o Ruta B (Desarrollo) según clasificacion_actividades.",
-      "properties": {
-        "ruta": { "type": "string", "enum": ["A", "B", "AB"], "description": "A=Investigación, B=Desarrollo, AB=Ambas" },
-        "estado_del_arte_investigacion": { "type": "string", "maxLength": 5000, "description": "Ruta A (pregunta 7)" },
-        "nuevos_conocimientos_generados": { "type": "string", "maxLength": 5000, "description": "Ruta A (pregunta 8); debe nacer del estado_del_arte_investigacion (regla QA 3)" },
-        "descripcion_desarrollo_tangible": { "type": "string", "maxLength": 5000, "description": "Ruta B (pregunta 9)" },
-        "atributos_tecnicos_superioridad": { "type": "string", "maxLength": 5000, "description": "Ruta B (pregunta 10)" },
-        "incertidumbre_cientifico_tecnologica": { "type": "string", "maxLength": 5000, "description": "Ruta B (pregunta 11); regla QA 4" }
-      }
-    },
-
-    "form_w3": {
-      "type": "object",
-      "description": "FORM_W3 — Capacidades (RRHH, personal asociado, subcontratos) y Carta Gantt/Presupuesto.",
-      "required": ["profesional_acreditador", "plan_de_trabajo"],
-      "properties": {
-        "profesional_acreditador": {
-          "type": "object",
-          "required": ["nombre", "tiene_contrato_vigente", "experiencia_id_36m"],
-          "properties": {
-            "nombre": { "type": "string" },
-            "tiene_contrato_vigente": { "type": "boolean", "description": "Contrato de trabajo o de servicios vigente (regla QA 2)" },
-            "experiencia_id_36m": { "type": "boolean", "description": "CV refleja I+D en los últimos 36 meses (regla QA 2)" },
-            "cv_path": { "type": "string" }, "titulo_path": { "type": "string" }
-          }
-        },
-        "personal_asociado": { "type": "array", "items": { "type": "object", "properties": {
-          "nombre": { "type": "string" }, "funcion": { "type": "string" }, "horas": { "type": "number" },
-          "cuenta": { "type": "string", "enum": ["Director", "Director Alterno", "Investigador", "Tecnico"], "description": "Categoría RRHH del presupuesto oficial" },
-          "valor_hh": { "type": "number", "description": "Valor hora-hombre (CLP) para el presupuesto" } } } },
-        "actividades": { "type": "array", "description": "Carta Gantt: actividades del plan de trabajo.",
-          "items": { "type": "object", "properties": {
-            "n": { "type": "string" }, "objetivo": { "type": "string" }, "nombre": { "type": "string" },
-            "desafio_n": { "type": "string" }, "fecha_inicio": { "type": "string" }, "fecha_fin": { "type": "string" } } } },
-        "subcontratos_habilitados": { "type": "array", "items": { "type": "string" } },
-        "plan_de_trabajo": { "type": "string", "description": "Ruta a la planilla Gantt+presupuesto generada (.xlsx)" }
-      }
-    },
-
-    "form_w4": {
-      "type": "object",
-      "description": "FORM_W4 — Cumplimiento administrativo, sistema contable, encuesta de caracterización y arancel.",
-      "required": ["nombre_sistema_contable", "registro_encuesta_ley_id"],
-      "properties": {
-        "nombre_sistema_contable": { "type": "string", "description": "SAP, Softland, Defontana, etc." },
-        "verificacion_sistema_contable": { "type": "string", "description": "Ruta a captura/PDF que muestra centros de costo" },
-        "registro_encuesta_ley_id": {
-          "type": "object",
-          "properties": {
-            "fase_proyecto_actual": { "type": "string", "enum": ["Concepto", "Prototipo", "Prototipo Funcional", "PMV", "Producto Funcional", "Escalando en ventas"] },
-            "tipo_innovacion_principal": { "type": "string", "enum": ["Producto (bien)", "Producto (servicio)", "Proceso"] },
-            "alcance_innovacion": { "type": "string", "enum": ["Eficiencia", "Incremental", "Disruptiva"] },
-            "numero_usuarios_actuales": { "type": "string" },
-            "numero_clientes_actuales": { "type": "string" },
-            "modelo_negocio_ingresos": { "type": "string", "enum": ["B2B", "B2C", "B2G", "C2C", "Otro"] },
-            "metas_valorizacion_ley_rep": { "type": "array", "items": { "type": "string" } },
-            "certificaciones_ambientales_empresa": { "type": "array", "items": { "type": "string" } }
-          }
-        },
-        "arancel_utm": { "type": "number", "description": "Arancel en UTM según la escala por tramos (tope 30). Calculado por el motor." },
-        "arancel_clp": { "type": "number" },
-        "arancel_tramo_utm": { "type": "string" }
-      }
-    },
-
-    "form_w5": {
-      "type": "object",
-      "description": "FORM_W5 — QA de coherencia, pago de arancel y envío en plataforma Corfo.",
-      "required": ["qa_coherencia", "enviado"],
-      "properties": {
-        "qa_coherencia": {
+        "indicadores": {
           "type": "array",
-          "description": "Resultado de las 4 reglas de coherencia (motor-reglas).",
-          "items": { "type": "object", "properties": {
-            "regla": { "type": "string" }, "estado": { "type": "string", "enum": ["ok", "alerta", "pendiente"] }, "detalle": { "type": "string" } } }
+          "description": "SALIDA (motor): lectura de viabilidad de cada indicador clave contra su umbral.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "indicador": { "type": "string", "description": "p.ej. 'margen_contribucion_pct', 'ltv_cac_ratio', 'payback_cac_meses', 'penetracion_som_pct'" },
+              "valor": { "type": "number" },
+              "umbral": { "type": "string" },
+              "estado": { "type": "string", "enum": ["ok", "alerta", "critico"] }
+            }
+          }
         },
-        "enviado": { "type": "boolean" },
-        "comprobante_arancel_pago": { "type": "string" },
-        "numero_transaccion_arancel": { "type": "string" },
-        "comprobante_envio_ley_id": { "type": "string" }
+        "comentarios_revision": { "type": "array", "items": { "type": "string" }, "description": "Observaciones del consultor / revisor par sobre el modelo." },
+        "info_suficiente": { "type": "boolean", "description": "false = no se pudo evaluar por datos faltantes del cliente -> compuerta DEVOLVER. Default true." },
+        "compuerta": {
+          "type": "string",
+          "enum": ["SÓLIDO", "AJUSTAR", "INVIABLE", "DEVOLVER"],
+          "description": "Calculada con motor-reglas/reglas.py compuerta_viabilidad(indicadores, info_suficiente). SOLIDO -> Fase 2. AJUSTAR -> volver a EVAL_P4 con palancas. INVIABLE -> informe al cliente, fin. DEVOLVER -> reunion con el cliente, re-EVAL_P3."
+        },
+        "palancas_ajuste": {
+          "type": "array",
+          "description": "Cuando la compuerta es AJUSTAR: hipotesis de cambio para que el modelo cierre, A MODO DE SUGERENCIA (el consultor y el cliente deciden y pueden descartar). No cambian el veredicto por si solas.",
+          "items": {
+            "type": "object",
+            "required": ["palanca", "hipotesis"],
+            "properties": {
+              "palanca": { "type": "string", "enum": ["pricing", "segmento", "canal", "estructura_costos", "cac", "retencion", "otro"] },
+              "hipotesis": { "type": "string" },
+              "impacto_esperado": { "type": "string" }
+            }
+          }
+        }
       }
     },
 
     "perfil_corfo": {
       "type": "object",
-      "description": "Fase 1 (Perfil de Proyecto) — SOLO CORFO. Versión condensada, previa y OBLIGATORIA; recibe retroalimentación no vinculante del Subcomité antes de habilitar la Fase 2 (formulación completa). Ley I+D no tiene Perfil.",
+      "description": "Fase 1 CORFO - Perfil de Proyecto: version condensada, previa y (segun el fondo) obligatoria, que recibe retroalimentacion no vinculante antes de habilitar la Fase 2. Aqui solo cubre las secciones de modelo de negocio / mercado / escalamiento del Perfil. Lo escribe mn-form-perfil.",
       "properties": {
         "fondo": { "type": "string" },
         "secciones": {
           "type": "array",
-          "description": "Perfil condensado (problema · solución · mercado · capacidades) derivado de eval_p4.",
+          "description": "Perfil condensado (problema . mercado objetivo . propuesta de valor . escalamiento) derivado de modelo_negocio + investigacion_mercado.",
           "items": {
             "type": "object",
             "required": ["id", "respuesta"],
             "properties": {
-              "id": { "type": "string" }, "titulo": { "type": "string" }, "respuesta": { "type": "string" }
+              "id": { "type": "string" },
+              "titulo": { "type": "string" },
+              "respuesta": { "type": "string" }
             }
           }
         },
-        "enviado": { "type": "boolean", "description": "el Perfil se presentó en la plataforma CORFO" },
+        "enviado": { "type": "boolean", "description": "el Perfil se presento en la plataforma CORFO" },
         "fecha_envio": { "type": "string" },
-        "retroalimentacion": { "type": "string", "description": "feedback del Subcomité (no vinculante)" },
+        "retroalimentacion": { "type": "string", "description": "feedback del Subcomite (no vinculante)" },
         "feedback_recibido": { "type": "boolean", "description": "GATE: la Fase 2 (FORM_W1) no inicia hasta que sea true" }
+      }
+    },
+
+    "narrativa": {
+      "type": "object",
+      "description": "Arquitectura de la narrativa (salida de FORM_W1). El hilo problema -> mercado -> propuesta de valor -> diferenciacion que conecta el modelo con lo que pide el fondo. Lo escribe mn-form-w1.",
+      "required": ["problema_oportunidad", "mercado_objetivo", "propuesta_valor", "diferenciacion"],
+      "properties": {
+        "titulo_proyecto": { "type": "string", "maxLength": 200 },
+        "resumen": { "type": "string", "maxLength": 2000 },
+        "problema_oportunidad": { "type": "string", "description": "El problema de mercado, dimensionado con cifras verificadas." },
+        "mercado_objetivo": { "type": "string", "description": "A quien apunta (segmento, tamano, geografia), con las cifras de investigacion_mercado." },
+        "propuesta_valor": { "type": "string" },
+        "diferenciacion": { "type": "string", "description": "Que lo hace distinto / mejor vs. competidores y sustitutos identificados." }
       }
     },
 
     "formulario_oficial": {
       "type": "object",
-      "description": "Respuestas redactadas al formulario OFICIAL del fondo elegido (fund-aware). Se AGREGA al insumo del proceso (no lo reemplaza). Las secciones exigidas por fondo están en motor-reglas/formularios.json.",
+      "description": "Respuestas redactadas a las secciones de modelo de negocio / mercado / escalamiento del formulario OFICIAL del fondo (fund-aware). Salida de FORM_W2 (mn-form-w2). Las secciones exigidas por fondo estan en motor-reglas/formularios.json; el piloto solo redacta las de su alcance.",
       "properties": {
-        "fondo": { "type": "string", "description": "id del fondo en formularios.json (ley_id, crea_valida, innova_alta_tecnologia, consolida_expande, capital_humano)" },
+        "fondo": { "type": "string", "description": "id del fondo en formularios.json (crea_valida, innova_alta_tecnologia, consolida_expande, capital_humano)" },
         "secciones": {
           "type": "array",
           "items": {
             "type": "object",
             "required": ["id", "respuesta"],
             "properties": {
-              "id": { "type": "string", "description": "id de la sección en formularios.json" },
+              "id": { "type": "string", "description": "id de la seccion en formularios.json" },
               "titulo": { "type": "string" },
-              "respuesta": { "type": "string", "description": "redacción de la respuesta, fundamentada en el insumo del Deep Research" },
-              "cumple_requisitos": { "type": "boolean", "description": "el redactor confirma que cubre los requisitos ('incluir') de la sección" }
+              "respuesta": { "type": "string", "description": "Redaccion fundamentada en el modelo y la investigacion de mercado verificada." },
+              "en_alcance_piloto": { "type": "boolean", "description": "true = seccion de modelo de negocio / mercado / escalamiento que el piloto redacta; false = queda para el equipo GT / F19 (p.ej. capacidades del equipo, actividades de I+D)." },
+              "cumple_requisitos": { "type": "boolean", "description": "el redactor confirma que cubre los requisitos ('incluir') de la seccion." },
+              "dentro_limite": { "type": "boolean", "description": "la respuesta respeta el tope de caracteres de la seccion." }
             }
           }
         }
       }
     },
 
+    "plan_escalamiento": {
+      "type": "object",
+      "description": "Plan de escalamiento + proyeccion + hitos comerciales (salida de FORM_W3). Como se pasa del estado actual al mercado. Lo escribe mn-form-w3. NO incluye el detalle de equipo / capacidades del beneficiario (fuera del piloto).",
+      "required": ["hitos_comerciales", "proyeccion_estructurada"],
+      "properties": {
+        "estado_actual": { "type": "string", "description": "Punto de partida comercial (clientes, ventas, traccion hoy)." },
+        "hitos_comerciales": {
+          "type": "array",
+          "description": "Hitos del camino al mercado, con fecha y meta medible.",
+          "items": {
+            "type": "object",
+            "required": ["nombre"],
+            "properties": {
+              "n": { "type": "string" },
+              "nombre": { "type": "string" },
+              "meta": { "type": "string", "description": "Indicador medible (nro de clientes, ingresos, contratos firmados)." },
+              "fecha_objetivo": { "type": "string" }
+            }
+          }
+        },
+        "metas_traccion": { "type": "string", "description": "Metas de traccion comprometidas durante el proyecto (y como se miden)." },
+        "proyeccion_estructurada": { "type": "string", "description": "Ruta a la planilla de proyeccion generada (render/gantt.py) o resumen de la proyeccion del escenario base." },
+        "estrategia_escalamiento": { "type": "string", "description": "Como se escala: nuevos segmentos, nuevas geografias, canales, alianzas. Anclado al SAM/SOM." }
+      }
+    },
+
+    "impacto_continuidad": {
+      "type": "object",
+      "description": "Impacto, continuidad y supuestos a confirmar (salida de FORM_W4). Lo escribe mn-form-w4.",
+      "required": ["impacto_esperado", "estrategia_continuidad"],
+      "properties": {
+        "impacto_esperado": {
+          "type": "object",
+          "properties": {
+            "economico": { "type": "string", "description": "Ingresos incrementales, ahorro, empleos - con cifras del modelo." },
+            "social": { "type": "string" },
+            "ambiental": { "type": "string" }
+          }
+        },
+        "estrategia_continuidad": { "type": "string", "description": "Como se sostiene el negocio despues del subsidio: fuente de ingresos, captura de valor, proteccion de lo desarrollado." },
+        "riesgos_barreras": {
+          "type": "array",
+          "items": { "type": "object", "properties": { "riesgo": { "type": "string" }, "mitigacion": { "type": "string" } } }
+        },
+        "supuestos_a_confirmar": {
+          "type": "array",
+          "description": "Registro EXPLICITO de todo supuesto del modelo / formulario que el cliente aun debe confirmar antes de presentar. Se arrastra desde supuestos_modelo.supuestos con confirmado=false.",
+          "items": {
+            "type": "object",
+            "required": ["supuesto"],
+            "properties": {
+              "supuesto": { "type": "string" },
+              "seccion_afectada": { "type": "string" },
+              "responsable_confirmar": { "type": "string", "enum": ["cliente", "consultor"] }
+            }
+          }
+        }
+      }
+    },
+
+    "qa_entrega": {
+      "type": "object",
+      "description": "QA de coherencia y entrega (salida de FORM_W5). Las reglas las corre motor-reglas/reglas.py; la entrega la aprueba el consultor. NO hay envio en plataforma.",
+      "required": ["qa_coherencia", "entregado"],
+      "properties": {
+        "qa_coherencia": {
+          "type": "array",
+          "description": "Resultado de las reglas de coherencia del motor (la matematica del formulario cuadra con modelo_negocio; los numeros no se contradicen entre secciones; los supuestos no verificados estan marcados; las respuestas respetan el tope).",
+          "items": {
+            "type": "object",
+            "properties": {
+              "regla": { "type": "string" },
+              "estado": { "type": "string", "enum": ["ok", "alerta", "pendiente"] },
+              "detalle": { "type": "string" }
+            }
+          }
+        },
+        "entregado": { "type": "boolean", "description": "El paquete se entrego al consultor (con su OK). No implica presentacion en plataforma." },
+        "fecha_entrega": { "type": "string" },
+        "paquete_path": { "type": "string", "description": "Ruta al paquete de entregables del modelo de negocio (carpeta postulacion/)." },
+        "observaciones_abiertas": { "type": "array", "items": { "type": "string" }, "description": "Alertas del QA que quedaron sin resolver y el consultor debe cerrar antes de presentar." }
+      }
+    },
+
     "glosario": {
       "type": "array",
-      "description": "Términos técnicos del ÁREA del proyecto (SRS, GLP, TRL de dominio, siglas, nomenclatura científica) explicados en lenguaje llano PARA EL CONSULTOR, que puede no ser experto en el tema. Los agentes que redactan contenido (Deep Research, preparar-caso, formulación) lo van poblando al encontrar un término no obvio. Se renderiza en el Panel del consultor.",
+      "description": "Terminos no obvios PARA EL CONSULTOR: siglas y jerga del rubro del cliente, y terminos del dominio de modelos de negocio la primera vez que aparecen en el caso (CAC, LTV, margen de contribucion, TAM/SAM/SOM, payback, churn). Los agentes que redactan contenido lo van poblando. Se renderiza en el Panel del consultor.",
       "items": {
         "type": "object",
         "required": ["termino", "definicion"],
         "properties": {
-          "termino": { "type": "string", "description": "El término o concepto (nombre completo)" },
-          "sigla": { "type": "string", "description": "Sigla/abreviatura si la tiene (p.ej. SRS, GLP)" },
-          "definicion": { "type": "string", "description": "Explicación en 1-2 frases, en lenguaje llano, sin más jerga" }
+          "termino": { "type": "string", "description": "El termino o concepto (nombre completo)" },
+          "sigla": { "type": "string", "description": "Sigla / abreviatura si la tiene (p.ej. CAC, LTV, SAM)" },
+          "definicion": { "type": "string", "description": "Explicacion en 1-2 frases, en lenguaje llano, sin mas jerga" }
         }
       }
     },
 
     "postulacion": {
       "type": "object",
-      "description": "Paquete de postulación (esquema de gestión): el árbol de carpetas y documentos que exige el fondo para postular. Lo genera tools/postulacion.py (scaffold) al entrar a formulación desde motor-reglas/documentos_postulacion.json; el CHECKLIST.md de proyectos/<tenant>/postulacion/ es su proyección. El gate de envío (FORM_W5) exige que no falte ningún documento obligatorio.",
+      "description": "Paquete de entregables del modelo de negocio: la carpeta y los documentos que el piloto produce para las secciones de mercado / modelo / escalamiento del fondo. Lo genera tools/postulacion.py (scaffold) al entrar a Fase 2 desde motor-reglas/documentos_postulacion.json; el CHECKLIST.md de proyectos/<tenant>/postulacion/ es su proyeccion. NO cubre el paquete administrativo completo del fondo (eso es del equipo GT / F19).",
       "properties": {
         "fondo": { "type": "string", "description": "clave del fondo en documentos_postulacion.json" },
         "fondo_nombre": { "type": "string" },
         "items": {
           "type": "array",
-          "description": "Un documento por fila del checklist, con su estado de gestión.",
+          "description": "Un documento por fila del checklist, con su estado de gestion.",
           "items": {
             "type": "object",
             "required": ["carpeta", "doc", "responsable", "estado"],
             "properties": {
               "carpeta": { "type": "string" },
               "doc": { "type": "string" },
-              "responsable": { "type": "string", "enum": ["cliente", "brinca", "sistema"], "description": "cliente = lo aporta la empresa · brinca = lo arma el consultor · sistema = lo genera el flujo" },
+              "responsable": { "type": "string", "enum": ["cliente", "consultor", "sistema"], "description": "cliente = lo aporta la empresa . consultor = lo arma el consultor . sistema = lo genera el flujo" },
               "fuente": { "type": ["string", "null"], "description": "para responsable=sistema: bloque/campo del expediente de donde sale" },
               "opcional": { "type": "boolean" },
-              "confirmar": { "type": "boolean", "description": "documento inferido, pendiente de validar con GT contra las bases del fondo" },
-              "estado": { "type": "string", "enum": ["pendiente", "generado", "listo", "na"], "description": "generado = lo produjo el sistema · listo = entregado/confirmado · na = opcional no aplica" },
+              "estado": { "type": "string", "enum": ["pendiente", "generado", "listo", "na"], "description": "generado = lo produjo el sistema . listo = entregado/confirmado . na = opcional no aplica" },
               "nota": { "type": "string" }
             }
           }
