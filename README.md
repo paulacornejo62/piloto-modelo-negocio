@@ -1,27 +1,57 @@
-# sistema/ — la herramienta (Línea 2)
+# piloto-modelo-negocio — la herramienta (vista técnica)
 
-Lo que **se instala, se usa y se traspasa al usuario final**. Herramienta agéntica que acompaña la evaluación, formulación y postulación de proyectos a Ley I+D / CORFO.
+Piloto **aislado**. Adaptación del motor de formulación de financiamiento de la iniciativa
+F19 (herramienta agéntica "GTF") para que, en vez de formular postulaciones a Ley I+D,
+**construya modelos de negocio** de proyectos de innovación y **redacte las secciones de
+modelo de negocio / mercado / escalamiento** de los formularios de subsidios CORFO (Crea y
+Valida, Innova Alta Tecnología, Consolida y Expande, Capital Humano).
 
-> 👤 **¿Vas a instalar/usar la herramienta (consultor GT)?** Empieza por **[GUIA-USUARIO.md](GUIA-USUARIO.md)**. Este README es la vista técnica.
+> 👤 **¿Vas a usar la herramienta?** Empieza por **[GUIA-USUARIO.md](GUIA-USUARIO.md)**
+> (pendiente de actualizar). Este README es la vista técnica.
 >
-> 🚦 **GUARDIÁN (regla operativa fundamental):** aquí va **solo** lo que se instala/usa/traspasa. El **diseño, las decisiones, las pruebas y las validaciones** de *nuestro* proceso viven en [`../desarrollo/`](../desarrollo/) (`diseno/`, `pruebas/`, `validacion/`). Ante la duda, no va aquí.
+> **Aislado:** git local propio, sin conexión al repo brinca ni a GitHub. `proyectos/`
+> arranca vacío, sin datos de clientes. Se puede romper y rehacer: se commitea seguido.
 
 ## Componentes
 | Carpeta / archivo | Qué es |
 |---|---|
-| `CLAUDE.md` | **Instrucciones del agente** al operar la herramienta (rol de orquestador, flujo, reglas transversales). Se carga solo al lanzar `claude` desde aquí. |
-| `.claude/skills/` | Pasos del flujo: onboarding, orquestador, EVAL_P1…P5, PERFIL (Fase 1 CORFO), FORM_W1…W5, QA de veracidad, KB |
-| `.claude/agents/` | Agentes reutilizables: `mn-deep-researcher`, `mn-qa-veracidad` |
-| `motor-reglas/` | Motor determinista: `parametros.json` (umbrales) + `reglas.py` (mercado, unit economics, proyección, compuerta de viabilidad, QA de coherencia) · `formularios.json` (secciones del formulario oficial por fondo) · `documentos_postulacion.json` (manifiesto de entregables por fondo) |
-| `expediente.schema.json` | Contrato del estado de una postulación (los datos tipados que se heredan entre pasos) |
-| `render/` | `render.py` (expediente→md, con **Panel del consultor** al inicio: resumen legible + glosario), `formulario.py` (Formulario Ley I+D), `gantt.py` (Gantt+Presupuesto) |
-| `tools/` | `browse.mjs` (navegador), `fuentes.json`/`.py` (registro de fuentes), `kb.py` (base de conocimiento), `postulacion.py` (paquete de postulación: carpetas + CHECKLIST por fondo), `estado`/`bitacora`/`panel` (flujo y sesiones) |
-| `kb/` | Base de conocimiento transversal (papers/patentes): estructura + taxonomía. **Arranca vacía**; se puebla con conocimiento real y validado al correr postulaciones. |
-| `plantillas/` | Render de documentos finales |
-| `proyectos/` | Una carpeta por postulación (aislada). Vacío al instalar; se crean con `mn-nuevo-proyecto`. Al entrar a formulación se le agrega `postulacion/` (árbol de documentos + `CHECKLIST.md`). |
+| `CLAUDE.md` | **Instrucciones del agente** (rol de orquestador, flujo P1…P5 + W1…W5, reglas transversales). Se carga al lanzar `claude` desde aquí. |
+| `.claude/skills/` | Pasos del flujo, prefijo `mn-`: `mn-nuevo-proyecto`, `mn-orquestar`, `mn-estado`, Fase 1 (`mn-eval-reunion-1`, `-deep-research-1`, `-reunion-2`, `-preparar-caso`, `-comite`), `mn-form-perfil` (Fase 1 CORFO), Fase 2 (`mn-form-w1`…`w5`), `mn-qa-veracidad`, `mn-kb-agregar` |
+| `.claude/agents/` | Agentes reutilizables: `mn-deep-researcher` (investigador de mercado), `mn-qa-veracidad` (verificador adversarial de cifras) |
+| `motor-reglas/` | Motor determinista: `parametros.json` (umbrales — **POR VALIDAR con ing. comercial**) + `reglas.py` (mercado, unit economics, proyección, compuerta de viabilidad, QA de coherencia) · `formularios.json` (secciones del formulario por fondo, con flag `en_alcance_piloto`) · `documentos_postulacion.json` (manifiesto de entregables de modelo de negocio por fondo) |
+| `expediente.schema.json` | Contrato del estado de un caso: `perfil_comercial` → `investigacion_mercado` → `supuestos_modelo` → `modelo_negocio` → `revision_viabilidad` → `narrativa` → `formulario_oficial` → `plan_escalamiento` → `impacto_continuidad` → `qa_entrega` |
+| `render/` | `render.py` (expediente→md, con Panel del consultor), `formulario.py`, `gantt.py`. **Pendiente de adaptar** (bloque siguiente). |
+| `tools/` | `browse.mjs` (navegador), `fuentes.json`/`.py` (fuentes de mercado), `kb.py` (base de conocimiento), `postulacion.py` (paquete de entregables + CHECKLIST por fondo), `estado`/`bitacora`/`panel` (flujo y sesiones) |
+| `kb/` | Base de conocimiento transversal de mercado (informes, comparables, benchmarks): clasificada por **sector económico** + tipo de fuente. **Arranca vacía.** |
+| `proyectos/` | Una carpeta por caso (aislada, gitignoreada). Vacío; se crean con `mn-nuevo-proyecto`. Al entrar a Fase 2 se agrega `postulacion/` (entregables + `CHECKLIST.md`). |
 | `SETUP.md` · `setup/` · `.mcp.json` · `package.json` | Instalación y configuración |
 
-## Diseño y estado
-El diseño técnico (arquitectura, contexto operacional), el mapa de fidelidad flujo↔agentes y el estado de avance viven en **[`../desarrollo/diseno/`](../desarrollo/diseno/)** — porque son parte de cómo lo construimos, no del producto instalado.
+## Estado del piloto
 
-Cómo correrlo: **[COMO-CORRER.md](COMO-CORRER.md)**.
+### Sesión 2026-09-01 — adaptación financiamiento I+D → modelo de negocio
+
+**TAREA 1 — renombre de prefijo** (`11858c0`): 16 skills + 2 agentes `gtf-*` → `mn-*`,
+frontmatter y todas las referencias cruzadas.
+
+**TAREA 2 — adaptación de contenido**, por bloques:
+
+| Bloque | Commit | Qué cambió |
+|---|---|---|
+| `CLAUDE.md` | `cc7966a` | Rol = asistente de modelo de negocio; flujo P1…P5 (construir el modelo) + W1…W5 (redactar secciones); compuerta **SÓLIDO / AJUSTAR / INVIABLE / DEVOLVER**; 12 reglas transversales (determinismo del motor, anclar cifras de mercado a fuente verificable, QA independiente, supuesto ≠ dato). Equipo/capacidades del beneficiario queda fuera del piloto (lo cubre F19). Sin envío irreversible. |
+| `expediente.schema.json` | `f6774dc` | Bloques `eval_p*`/`form_w*` → bloques de modelo de negocio. `unit_economics` separa ENTRADAS de SALIDAS del motor. Eliminado: Frascati, elegibilidad, arancel, TRL, profesional acreditador, encuesta Ley I+D. |
+| `motor-reglas/` | `590cf93` · `fca12da` | `reglas.py`: `mercado_coherencia`, `unit_economics`, `proyeccion(_escenarios)`, `encaje_mercado`, `indicadores_viabilidad`, `compuerta_viabilidad`, `qa_coherencia_modelo` (se conserva `coherencia_cifras_cliente`). Nuevo `parametros.json` (umbrales, reemplaza `instrumentos.json`). `formularios.json` sin `ley_id`, cada sección con `en_alcance_piloto`. `documentos_postulacion.json` acotado a entregables de modelo de negocio. Tests pasan. |
+| Skills — Lote 1 (andamiaje) | `2329f11` | `mn-orquestar` (flujo nuevo, tabla paso→skill→bloque, gates), `mn-nuevo-proyecto` (fondos CORFO, entradas: proyecto de innovación + datos comerciales), `mn-estado`, `mn-deep-researcher` + `mn-qa-veracidad` (investigación/verificación **de mercado**), `mn-kb-agregar`. `tools/fuentes.json` → fuentes de mercado (INE, Banco Central, SII, CMF, Mercado Público, gremios, prensa de negocios, competidores). `kb/` reseteada; taxonomía por sector; plantillas `informe-mercado` y `comparable` (reemplazan paper/patente); ~229 fichas F19 eliminadas. |
+| Skills — Lote 2 (Fase 1) | `cb8b88b` | `mn-eval-reunion-1` → `perfil_comercial`; `mn-eval-deep-research-1` → `investigacion_mercado` (TAM/SAM/SOM, competidores, precios); `mn-eval-reunion-2` → `supuestos_modelo`; `mn-eval-preparar-caso` → `modelo_negocio` (Canvas + llamadas al motor); `mn-eval-comite` → `revision_viabilidad` (compuerta del motor). |
+| Skills — Lote 3 (Fase 2) | `06bbd0f` | `mn-form-perfil` (Perfil CORFO acotado a modelo de negocio); `mn-form-w1` → `narrativa`; `mn-form-w2` → `formulario_oficial` (solo secciones `en_alcance_piloto`); `mn-form-w3` → `plan_escalamiento`; `mn-form-w4` → `impacto_continuidad`; `mn-form-w5` → `qa_entrega` (entrega, sin envío). |
+
+### Pendiente (próxima sesión)
+1. **`render/*`** — `render.py` valida bien contra el schema nuevo, pero el render a
+   `expediente.md` (Panel, secciones, `--formulario`, `--limites`), `formulario.py` y
+   `gantt.py` todavía referencian bloques viejos. Es el último bloque del orden acordado.
+2. **Docs de nivel raíz** — `SETUP.md`, `COMO-CORRER.md`, `GUIA-USUARIO.md` aún describen el
+   flujo Ley I+D.
+3. **Validación con ingeniería comercial** — los umbrales de `motor-reglas/parametros.json`
+   (margen de contribución mínimo, LTV/CAC, payback, penetración de SOM) y la guía de
+   redacción fina por sección CORFO.
+
+Cómo correrlo: **[COMO-CORRER.md](COMO-CORRER.md)** (pendiente de actualizar).
