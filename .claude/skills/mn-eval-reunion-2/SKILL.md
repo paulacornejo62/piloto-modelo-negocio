@@ -1,23 +1,55 @@
 ---
 name: mn-eval-reunion-2
-description: Paso EVAL_P3 del flujo de financiamiento GT — Reunión #2 con el cliente. Valida la hipótesis y los hallazgos del Deep Research #1, resuelve el cuestionario y produce el Perfil Técnico v2 (incluye TRL declarado). Escribe el bloque eval_p3. Lo invoca el orquestador mn-orquestar.
+description: Paso EVAL_P3 del flujo de modelo de negocio — Reunión #2 con el cliente. Valida los hallazgos de la investigación de mercado y levanta con el cliente los supuestos del modelo: segmentos, propuesta de valor, canales, estructura de ingresos y de costos, CAC y capacidad de ejecución. Escribe el bloque supuestos_modelo. Lo invoca el orquestador mn-orquestar.
 ---
 
-# EVAL_P3 — Reunión #2 Cliente
+# EVAL_P3 — Reunión #2 (supuestos del modelo)
 
-**Objetivo:** validar la hipótesis y los hallazgos del DRx v1, contrastar el estado del arte con la experiencia del cliente y resolver el cuestionario de indagación técnica.
+**Objetivo:** contrastar la investigación de mercado con la experiencia del cliente y
+**levantar los supuestos que alimentan el modelo de negocio**: quién es el cliente que
+paga, qué precio acepta, cómo se le llega, cuánto cuesta conseguirlo y qué cuesta operar.
 
-**Input:** el bloque `eval_p2` (Minuta v1, con `hipotesis_preliminar_o_objetivo_general` y `cuestionario_indagacion`) del expediente, más las **respuestas del cliente** (notas/transcripción de la Reunión #2) que te pase el orquestador o que estén en el **buzón** `proyectos/<tenant>/entradas/` (típicamente `entradas/reunion-2.md`, más cualquier documento nuevo que el consultor haya dejado ahí).
+**Input:** el bloque `investigacion_mercado` (con `preguntas_para_reunion_2`,
+`tamano_mercado` y `competidores`) del expediente, más las **respuestas del cliente**
+(notas/transcripción de la Reunión #2) que te pase el orquestador o que estén en el buzón
+`proyectos/<tenant>/entradas/` (típicamente `entradas/reunion-2.md`).
 
-**Tu tarea:**
-1. Registra las **respuestas al cuestionario** (`respuestas_cuestionario`: lista de {pregunta, respuesta}).
-2. Refina la hipótesis/objetivo con lo aprendido (`hipotesis_objetivo_refinado`).
-3. Redacta el **perfil técnico v2** (`perfil_tecnico_proyecto_v2`): alcance técnico actualizado, proceso/tecnología propuesta.
-4. Captura el **TRL declarado** por el cliente (`trl_declarado`, 1–9) — es input del motor de reglas para elegibilidad. Si el cliente no lo da explícito, **estímalo y márcalo como estimación** en el perfil técnico (no lo inventes con falsa precisión).
-5. **Consolida el modelo de negocio y la cadena de decisión (C2)** en `modelo_negocio_decision`: `propiedad_activos` (¿de quién son los activos que se intervienen? propios/arrendados/leasing/de un tercero), `autoridad_decision` (¿el proponente controla lo que propone?), `dinamicas_proveedor_leasing`, `barreras_contractuales` (p.ej. garantías: modificar un activo arrendado puede anularlas). **Nota clave:** una barrera comercial puede **SER el propio vacío de I+D** (p.ej. un estudio de no-daño que habilite la modificación sin perder garantía) → `barrera_como_vacio_id`. Sin entender el negocio, el comité no puede resolver.
-6. **Cifras del cliente (C5).** Cada dato cuantitativo que declare (tamaño de flota, ahorro esperado, unidades, plazos) agrégalo a `meta.cifras_declaradas[]` = {concepto, valor, unidad, fuente: "reunion-2"}. Si contradice una cifra ya declarada antes, **no la silencies**: el motor la marcará como alerta en la validación.
-7. Escribe el bloque `eval_p3` en `expediente.json` y pon `meta.paso_actual = "EVAL_P3"`.
+**Tu tarea (esquema `supuestos_modelo` en `../../expediente.schema.json`):**
+1. Registra las **respuestas al cuestionario** (`respuestas_cuestionario`: lista de
+   {pregunta, respuesta}).
+2. **Segmentos** (`segmentos[]`): `{ nombre, descripcion, tamano_estimado (nº de clientes
+   potenciales, con fuente si viene de la investigación), prioridad (primario/secundario/
+   futuro) }`. Prioriza con el cliente.
+3. **Propuesta de valor por segmento primario** (`propuesta_valor[]`): `{ segmento,
+   propuesta, dolor_que_resuelve, alternativa_actual_del_cliente }` — el verdadero competidor
+   suele ser "no hacer nada" o una planilla.
+4. **Canales** (`canales`) y **relación con clientes** (`relacion_clientes`).
+5. **Estructura de ingresos** (`estructura_ingresos[]`): `{ nombre, tipo (suscripcion/
+   transaccion/licencia/servicio/venta_unitaria/comision/otro), precio (CLP), unidad (por
+   qué se cobra), recurrencia_meses (0 = pago único) }`.
+6. **Estructura de costos** (`estructura_costos[]`): `{ concepto, tipo (fijo/variable), monto
+   (CLP; si variable = por unidad, si fijo = mensual), unidad }`. El motor necesita la
+   separación fijo/variable para el margen de contribución y el punto de equilibrio.
+7. **CAC** (`costo_adquisicion_cliente`): `{ valor_clp, base (dato del cliente / benchmark de
+   industria / supuesto), estado_evidencia }`.
+8. **Recursos y socios clave** (`recursos_y_socios_clave`).
+9. **Capacidad de ejecución** (`capacidad_ejecucion`): ¿el cliente PUEDE ejecutar este
+   modelo? Quién decide, qué le falta (capital, equipo, permisos, acuerdos). Una barrera de
+   ejecución puede ser justo lo que el subsidio viene a resolver — anótalo.
+10. **Supuestos consolidados** (`supuestos[]`): TODOS los supuestos del modelo, cada uno
+    `{ supuesto, valor, confirmado (bool), impacto_si_falla }`. Es un proyecto de
+    innovación: la mayoría partirá con `confirmado: false` — está bien, **se marcan, no se
+    esconden**. Los no confirmados se arrastran luego a `impacto_continuidad.supuestos_a_confirmar`.
+11. **Cifras del cliente** (C5): cada dato cuantitativo que declare (precio, nº de clientes,
+    ventas, costos) agrégalo a `meta.cifras_declaradas[]` = {concepto, valor, unidad, fuente:
+    "reunion-2"}. Si contradice una cifra ya declarada, **no la silencies**: el motor la
+    marcará como alerta.
+12. Escribe el bloque `supuestos_modelo` en `expediente.json` y pon
+    `meta.paso_actual = "EVAL_P3"`.
 
-**DoD:** respuestas del cliente registradas; objetivo/hipótesis validados; perfil técnico v2 y TRL declarado presentes; **modelo de negocio/cadena de decisión levantado**; cifras del cliente registradas.
+**DoD:** segmentos priorizados; propuesta de valor por segmento primario; estructura de
+ingresos y de costos (con fijo/variable); CAC con su base; capacidad de ejecución evaluada;
+lista de supuestos consolidada con su flag `confirmado`; cifras del cliente registradas.
 
-**No hagas:** Frascati ni perfil de subsidios todavía (eso es EVAL_P4, y se calcula con el motor de reglas).
+**No hagas:** unit economics, proyección ni compuerta todavía — eso es EVAL_P4, y lo calcula
+el motor.

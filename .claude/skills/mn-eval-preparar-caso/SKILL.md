@@ -1,91 +1,89 @@
 ---
 name: mn-eval-preparar-caso
-description: Paso EVAL_P4 del flujo de financiamiento GT — Preparar el Caso. Cuatro subetapas: Deep Research #2 (estado del arte específico + objetivo SMART), clasificación Frascati, perfil de subsidios CORFO y láminas de comité. Usa el motor de reglas determinista para Frascati y elegibilidad. Escribe el bloque eval_p4. Lo invoca el orquestador mn-orquestar.
+description: Paso EVAL_P4 del flujo de modelo de negocio — Construir el modelo. Consolida el Business Model Canvas y prepara las ENTRADAS de unit economics, tamaño de mercado y proyección; el motor de reglas calcula las SALIDAS (margen de contribución, LTV, LTV/CAC, payback, punto de equilibrio, proyección por escenarios, penetración de SOM). Escribe el bloque modelo_negocio. Lo invoca el orquestador mn-orquestar.
 ---
 
-# EVAL_P4 — Preparar el Caso
+# EVAL_P4 — Construir el modelo
 
-Análisis interno en cuatro subetapas. **Las decisiones numéricas/booleanas las calcula el motor de reglas, no tú.**
+**Las decisiones numéricas las calcula el motor de reglas, no tú.** Tu trabajo es
+consolidar el Canvas y **preparar entradas limpias y trazables** para el motor.
 
-**Input:** `eval_p1` (perfil comercial, tamaño empresa, fecha inicio), `eval_p2` (estado del arte v1) y `eval_p3` (perfil técnico v2, `trl_declarado`).
+**Input:** `perfil_comercial` (qué se vende, estado de desarrollo, tamaño de empresa),
+`investigacion_mercado` (tamaño de mercado, competidores, precios, benchmarks) y
+`supuestos_modelo` (segmentos, ingresos, costos, CAC, supuestos).
 
-> **Escritura para el consultor (transversal).** El caso lo lee un consultor que puede no ser experto en el tema. Expande toda sigla al primer uso y **mantén al día el `glosario`** del expediente: si el DR#2 introduce términos del área nuevos, agrégalos ({termino, sigla, definicion} en lenguaje llano). Ver regla 8 del CLAUDE.md.
+> **Escritura para el consultor.** El caso lo lee alguien que puede no ser experto en el
+> rubro ni en modelos de negocio. Expande toda sigla al primer uso y **puebla el `glosario`**
+> del expediente la primera vez que uses un término de negocio (CAC, LTV, margen de
+> contribución, TAM/SAM/SOM, payback, churn) o del rubro — `{termino, sigla, definicion}` en
+> lenguaje llano.
 
-## Subetapa I — Deep Research #2 (exhaustivo, fan-out paralelo)
-Estado del arte **exhaustivo y específico** para robustecer la novedad. Este es el pase profundo: en vez de una sola búsqueda, **abre varias en paralelo** y consolida.
-1. **Fan-out**: lanza **varios `mn-deep-researcher` en paralelo** (subagentes), repartidos por **motor y por tópico** (ver `python3 tools/fuentes.py usables`) — p.ej. uno por Google Patents, otro por papers, otro por un subtema. Cada uno investiga global y profundo, con evidencia y cobertura honesta.
-2. **QA**: corre **`mn-qa-veracidad`** sobre el conjunto (verifica, descarta alucinaciones, sincroniza fichas).
-3. **Dedup + síntesis**: deduplica contra la KB (`tools/kb.py dedup`) y consolida en un solo estado del arte.
-4. **Alimenta la KB (obligatorio)**: por cada fuente nueva verificada/parcial, crea su **ficha RICA** con `mn-kb-agregar` (plantilla según tipo, `profundidad_lectura` + `estado_evidencia`, **full-text si es accesible**). El conocimiento del DR#2 se acumula — no se queda solo en el expediente.
+## Subetapa I — (opcional) profundizar el mercado
+Si al construir el modelo detectas un hueco en la investigación (falta un sub-mercado, un
+competidor clave, un precio de referencia), lanza un **`mn-deep-researcher`** acotado a esa
+brecha y córrele **`mn-qa-veracidad`** encima. Alimenta la KB con lo nuevo (`mn-kb-agregar`).
+No repitas toda la investigación: solo cierra el hueco.
 
-> Alternativa para un pase aún más exhaustivo (ad-hoc, opt-in): un Workflow guardado. El fan-out nativo de arriba es la vía por defecto.
+## Subetapa II — Business Model Canvas
+Consolida `modelo_negocio.canvas` (9 bloques) desde `supuestos_modelo` +
+`investigacion_mercado`, en texto llano: `segmentos_cliente`, `propuesta_valor`, `canales`,
+`relacion_clientes`, `fuentes_ingreso`, `recursos_clave`, `actividades_clave`,
+`socios_clave`, `estructura_costos`. Cada afirmación debe rastrearse a un supuesto o a un
+hallazgo verificado; lo que sea aspiración, márcalo.
 
-Produce:
-- `estado_del_arte_especifico`: por qué la solución no es obvia ni asimilable hoy.
-- `desafios_tecnicos_consolidados`: incertidumbres técnicas específicas no resueltas por el estado del arte.
-- `perfil_tecnico_proyecto_v3`: alcance técnico actualizado tras el DR#2.
-- `objetivo_general_smart`: *Verbo + Qué + Métrica de éxito + Plazo*. (Heredará a FORM_W1.)
-> Tras este Deep Research, el orquestador corre **mn-qa-veracidad** (igual que en EVAL_P2).
-
-## Subetapa II — Frascati **adversarial por defecto** (motor de reglas)
-No clasifiques como I+D por defecto: **estresa la elegibilidad primero**. El error caro es el **falso positivo** (integración/ingeniería rutinaria vendida como I+D).
-
-1. **Prueba de exclusiones (obligatoria, no a pedido).** Antes de afirmar nada, contrasta el caso contra **cada** no-elegible de la Ley I+D y escribe el veredicto con sustento del estado del arte:
-   - `adaptacion_rutinaria` · `ingenieria_estandar` · `adquisicion_puesta_en_marcha` · `validacion_medicion_comercial` · `novedad_solo_local` (nuevo para la empresa/país ≠ nuevo para el estado del arte).
-   - Para cada una: `veredicto` = `sorteada` (el caso NO cae aquí, **con** sustento) | `aplica` (el caso CAE — no es I+D por ese flanco) | `pendiente` (falta indagar). "No lo hemos hecho nosotros" y "hay que instalarlo/coordinar" **no** son incertidumbre técnica.
-2. Determina los dos booleanos con criterio técnico. Cada componente afirmado debe **nombrar qué exclusión sortea**:
-   - `componente_i` (genera nuevo conocimiento / uso no trivial) y `componente_d` (resultado incierto / requiere experimentación).
-3. **Calcula** cuadrante, `es_id` y `es_id_defendible` con el motor (no los decidas tú), pasándole las exclusiones:
+## Subetapa III — Unit economics (motor)
+1. Define la **unidad del modelo** (`unit_economics.unidad_modelo`): un cliente/mes, una
+   transacción, un equipo vendido. Todo lo demás se interpreta respecto de ella.
+2. Prepara las **ENTRADAS** desde `supuestos_modelo` (consistentes con la unidad):
+   `precio_unitario`, `costo_variable_unitario`, `costos_fijos_mensuales`, `cac_clp`,
+   `vida_cliente_meses` (para pago único → 1).
+3. **Calcula las SALIDAS con el motor** (no las estimes tú):
    ```bash
-   python3 -c "import sys,json; sys.path.insert(0,'motor-reglas'); import reglas; \
-   print(json.dumps(reglas.frascati(<I>, <D>, exclusiones=[{'exclusion':'adaptacion_rutinaria','veredicto':'sorteada','sustento':'…'}, …]), ensure_ascii=False))"
+   python3 -c "import sys, json; sys.path.insert(0,'motor-reglas'); import reglas; \
+   print(json.dumps(reglas.unit_economics(precio_unitario=<P>, costo_variable_unitario=<CV>, \
+   costos_fijos_mensuales=<CF>, cac_clp=<CAC>, vida_cliente_meses=<V>), ensure_ascii=False, indent=2))"
    ```
-   Si `es_id_defendible` es **false** (alguna exclusión aplica o quedó sin sustento), el caso es un **candidato a falso positivo**: no lo lleves como I+D sólido — dilo, y pasa a la Subetapa II-b (reencuadre).
-4. Guarda `frascati = {componente_i, componente_d, cuadrante, es_id, es_id_defendible, justificacion, exclusiones_evaluadas[]}`.
+   Copia a `modelo_negocio.unit_economics` las salidas (`margen_contribucion_unitario`,
+   `margen_contribucion_pct`, `ltv_clp`, `ltv_cac_ratio`, `payback_cac_meses`,
+   `punto_equilibrio_unidades`, `punto_equilibrio_clp`). Si el motor devuelve
+   `faltan_entradas`, consíguelas o márcalas `[POR CONFIRMAR]` — no inventes un número para
+   que "cierre".
 
-## Subetapa II-b — Reencuadre a elegibilidad (**sugerir, no forzar**)
-Solo si `es_id` es **débil** (`es_id_defendible` false o dudoso). Cuando el caso, como está, no es I+D, no te limites a decir "no": **ofrece caminos** —a modo de sugerencia— para volverlo elegible. Poblá `reencuadre_elegibilidad[]` con opciones tipo:
-- `desarrollar_en_vez_de_comprar` — qué componente convendría desarrollar en lugar de adquirir.
-- `socio_academico` — apalancar con una universidad: estudios financiables por la propia ley que habilitan el proyecto completo.
-- `estudio_financiable` — qué estudio (p.ej. de no-daño, de seguridad) agregar que sí es I+D.
-- `fase_2` — mover el alcance incierto a una fase posterior.
+## Subetapa IV — Proyección por escenarios (motor)
+1. Fija `meta.horizonte_proyeccion_anios` según el fondo y el caso (típ. 3-5) si no está.
+2. Arma `proyeccion.escenarios[]` = pesimista / base / optimista. Cada uno: ENTRADAS
+   `supuestos_crecimiento` (texto), `unidades_ano_1`, `crecimiento_anual_pct`.
+3. **Calcula la tabla anual con el motor**:
+   ```bash
+   python3 -c "import sys, json; sys.path.insert(0,'motor-reglas'); import reglas; \
+   ue={'precio_unitario':<P_anual>,'costo_variable_unitario':<CV_anual>,'costos_fijos_mensuales':<CF>}; \
+   esc=[{'nombre':'base','unidades_ano_1':<U>,'crecimiento_anual_pct':<G>}]; \
+   print(json.dumps(reglas.proyeccion_escenarios(ue, esc, <ANIOS>), ensure_ascii=False, indent=2))"
+   ```
+   **Ojo con la unidad temporal**: `proyeccion()` toma precio y costo variable como
+   **anuales** por unidad activa. Si tu modelo es mensual (suscripción), anualiza (×12)
+   antes de pasarlos. Copia las filas `anios[]` de cada escenario al expediente.
 
-**Reglas duras (coherentes con C1):** son **propuestas que el consultor y el cliente evalúan y pueden descartar**; **no cambian el veredicto** por sí solas (cada opción lleva `es_sugerencia: true`); **no fabriques elegibilidad** para "salvar" el caso. Si no hay camino honesto, deja el array vacío y **dilo**.
-
-## Subetapa III — Perfil de subsidios (motor de reglas)
-Si `meta.instrumento_objetivo` está definido (no "por definir"), tenlo presente al **ordenar/priorizar** el perfil — pero la **elegibilidad y el % los manda el motor**, no la preferencia declarada (si el objetivo resulta no elegible, dilo).
-
-Cruza empresa + proyecto con los instrumentos CORFO usando el motor (TRL del `eval_p3`, tamaño y antigüedad del `eval_p1`):
+## Subetapa V — Encaje con el mercado (motor)
 ```bash
-python3 -c "import sys; sys.path.insert(0,'motor-reglas'); import reglas, json; print(json.dumps(reglas.instrumentos_elegibles(trl=<TRL>, tamano='<Tamaño>', antiguedad_meses=<N>, lidera_mujer=<bool>), ensure_ascii=False))"
+python3 -c "import sys, json; sys.path.insert(0,'motor-reglas'); import reglas; \
+print(json.dumps(reglas.encaje_mercado(ingresos_ano_final_clp=<ING_ULT_ANIO_BASE>, som_clp=<SOM>), ensure_ascii=False))"
 ```
-Para cada instrumento arma `perfil_subsidios[]` = {instrumento, elegible (del motor), cofinanciamiento_pct (del motor), alineacion (Bajo/Mediano/Alto — tu juicio cualitativo de fit), justificacion}. La **elegibilidad y el % son del motor**; la alineación cualitativa es tu aporte.
+Guarda `modelo_negocio.encaje_mercado` (`som_clp`, `ingresos_ano_final_base_clp`,
+`penetracion_som_pct`). Si `penetracion_som_pct > 1` (la proyección no cabe en el SOM),
+**dilo**: hay que revisar la proyección o el SOM antes de pasar a la revisión.
 
-> **Supuesto de tamaño (regla dura):** si `eval_p1.empresa_tamano_confirmado` no es `true`, el `cofinanciamiento_pct` es **provisorio** — el tamaño de empresa determina el %. NO lo asumas en silencio: incluye "**tamaño de empresa (afecta el cofinanciamiento)**" en los **datos a confirmar** de la recomendación/láminas, y dilo explícito. Lo mismo con `empresa_fecha_inicio_actividades` (antigüedad → elegibilidad) y `contabilidad` (Ley I+D) si vienen sin confirmar.
-
-## Subetapa IV — Consolidado para el comité
-Arma el **Consolidado proyecto para Comité** con la **estructura OFICIAL** de GT (fuente: `../../../../desarrollo/contexto/fuentes/estructura_comite.md`) — no inventes secciones. Guárdalo en `proyectos/<tenant>/laminas-comite.md`.
-
-> **Hilo conductor (C7).** Las secciones 3→6 no son tres listas sueltas: **enlaza cada problemática con su solución y con el desafío tecnológico** que la sostiene. El lector debe seguir *problema → solución → desafío técnico (incertidumbre)* para cada dolor, no una lista de problemas y aparte una lista de soluciones sin match. Numera o referencia cruzada para que el match sea explícito.
-
-Secciones (mapea desde el expediente):
-1. **Datos del cliente** — datos de la empresa (`eval_p1`) + **contactos de los involucrados en la evaluación**.
-2. **Contexto** *(si aplica)* — información del proceso de evaluación, consideraciones particulares, **postulaciones previas**.
-3. **Problemática / Oportunidad** — origen y causas + **cuantificación/dimensionamiento** (cifras del estado del arte).
-4. **Soluciones existentes** — alternativas de solución + **competidores relevantes** (del estado del arte verificado).
-5. **Propuesta de solución** — descripción de la solución (`perfil_tecnico_proyecto_v3`).
-6. **Desafíos tecnológicos** — identificación y descripción (`desafios_tecnicos_consolidados`; con el fact-check de vigencia).
-7. **Objetivo General** — el objetivo SMART + **KPI clave**.
-8. **Línea base** *(si aplica)* — para proyectos previos: diferencias postulación previa vs. actual; y una **tabla comparando los fondos candidatos** (del `perfil_subsidios`), p.ej.:
-
-   | Atributos | Ley I+D | Crea y Valida | … |
-   |---|---|---|---|
-   | Elegible / cofinanciamiento / tope / plazo / alineación | … | … | … |
-
-   Es el insumo con que el comité decide el instrumento. Incluye la clasificación Frascati (`es_id`) como respaldo de que es I+D, y los **datos a confirmar** (tamaño, contabilidad, antigüedad).
-9. **Presupuesto** — análisis de qué compone el presupuesto + **¿es posible aumentarlo?**
+## Subetapa VI — Documento del modelo
+Arma un **resumen legible del modelo** en `proyectos/<tenant>/modelo-negocio.md`: el Canvas,
+la tabla de unit economics (entradas y salidas), la proyección por escenarios, el encaje con
+el mercado, y la **lista de supuestos a confirmar** (de `supuestos_modelo.supuestos` con
+`confirmado: false`). Es el insumo de la revisión (EVAL_P5) y del gate humano **modelo**.
 
 ## Salida
-Escribe el bloque `eval_p4` (estado_del_arte_especifico, desafios_tecnicos_consolidados, perfil_tecnico_proyecto_v3, objetivo_general_smart, **frascati con exclusiones_evaluadas y es_id_defendible**, perfil_subsidios, y **reencuadre_elegibilidad[] si es_id es débil**) en `expediente.json`; `meta.paso_actual = "EVAL_P4"`. Valida y renderiza.
+Escribe el bloque `modelo_negocio` (`canvas`, `unit_economics` con entradas + salidas del
+motor, `proyeccion.escenarios` con las tablas del motor, `encaje_mercado`) en
+`expediente.json`; `meta.paso_actual = "EVAL_P4"`. Valida y renderiza.
 
-**DoD:** estado del arte específico citado y verificado (QA), objetivo SMART, **Frascati adversarial** calculado por el motor (exclusiones evaluadas + `es_id_defendible`) con justificación, perfil de subsidios con elegibilidad del motor, reencuadre sugerido si el caso es débil, y láminas de comité con el hilo problema→solución→desafío.
+**DoD:** Canvas consolidado y trazable; unit economics con las salidas **calculadas por el
+motor**; proyección de ≥1 escenario (idealmente 3) con su tabla anual del motor; encaje con
+el SOM calculado; supuestos a confirmar listados; documento del modelo escrito.

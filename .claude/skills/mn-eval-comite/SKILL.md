@@ -1,32 +1,64 @@
 ---
 name: mn-eval-comite
-description: Paso EVAL_P5 del flujo de financiamiento GT — Comité de pares y compuerta. Registra el acta del comité (voto, comentarios, instrumento) y calcula la compuerta GO/PIVOT/NO-GO con el motor de reglas. Cierra la Fase 1 (Evaluación). Lo invoca el orquestador mn-orquestar.
+description: Paso EVAL_P5 del flujo de modelo de negocio — Revisión de viabilidad y compuerta. Registra la revisión del modelo (consultor o par), calcula los indicadores y la compuerta SÓLIDO/AJUSTAR/INVIABLE/DEVOLVER con el motor de reglas, y determina el flujo. Cierra la Fase 1. Escribe el bloque revision_viabilidad. Lo invoca el orquestador mn-orquestar.
 ---
 
-# EVAL_P5 — Comité y compuerta
+# EVAL_P5 — Revisión de viabilidad y compuerta
 
-**Objetivo:** registrar el dictamen del comité de pares sobre el caso (láminas de EVAL_P4) y determinar el flujo.
+**Objetivo:** revisar el modelo construido en EVAL_P4 y determinar el flujo. **La compuerta
+la calcula el motor, no tú.**
 
-**Input:** `eval_p4` (Frascati con `es_id`/`es_id_defendible`, exclusiones, perfil de subsidios, `reencuadre_elegibilidad[]`), `eval_p3.modelo_negocio_decision`, y el **acta/decisión del comité** que te pase el orquestador (o `proyectos/<tenant>/acta-comite.md`).
+**Input:** `modelo_negocio` (Canvas, `unit_economics`, `proyeccion`, `encaje_mercado`),
+`investigacion_mercado.tamano_mercado`, y la **revisión** del consultor o de un par que te
+pase el orquestador (o `proyectos/<tenant>/revision.md`).
 
-**Precondición (C2, dura):** el comité **no puede resolver sin entender el negocio**. Antes de registrar el voto, verifica que `eval_p3.modelo_negocio_decision` esté poblado (propiedad de activos, quién decide, barreras contractuales). Si falta lo esencial, **no fuerces un voto**: el desenlace es `info_suficiente = false` → compuerta **DEVOLVER** (paso 4).
+**Precondición (dura):** no se puede evaluar un modelo sin sus números. Si faltan entradas
+clave de unit economics o la proyección (el motor las devolvió como `sin_dato` /
+`faltan_entradas`), **no fuerces una compuerta**: el desenlace es `info_suficiente = false`
+→ **DEVOLVER** (paso 4).
 
-**Tu tarea:**
-1. Registra el acta + **estrategia de postulación**: `voto_comite` (Aprobado I+D / Rechazado I+D / Condicionado a Ajustes / **Información Insuficiente**), `comentarios_tecnicos[]`, `info_suficiente` (bool), `aplica_ley_id` (booleano), `instrumento_corfo_seleccionado` (de los elegibles en `eval_p4.perfil_subsidios`), `enfoque_postulacion`.
-   - Si `eval_p4.frascati.es_id_defendible` es **false**, el comité debe pronunciarse sobre eso: o rechaza (no es I+D), o **condiciona** al reencuadre. **No trates un falso positivo como I+D sólido.**
-   - Cuando el caso sea débil, presenta el `reencuadre_elegibilidad[]` **como sugerencias** (C3) — el comité y el cliente deciden; no las impongas ni cambies el veredicto por ellas.
-2. **Calcula la compuerta con el motor** (no la decidas tú):
+**Tu tarea (esquema `revision_viabilidad` en `../../expediente.schema.json`):**
+1. **Calcula los indicadores con el motor**:
    ```bash
-   python3 -c "import sys; sys.path.insert(0,'motor-reglas'); import reglas; print(reglas.compuerta(es_id=<es_id>, voto_comite='<voto>', info_suficiente=<bool>))"
+   python3 -c "import sys, json; sys.path.insert(0,'motor-reglas'); import reglas; \
+   ue=<modelo_negocio.unit_economics como dict>; \
+   enc=<modelo_negocio.encaje_mercado como dict>; \
+   print(json.dumps(reglas.indicadores_viabilidad(ue, enc), ensure_ascii=False, indent=2))"
    ```
-   (usa el `es_id` de `eval_p4.frascati`, el `voto_comite` y `info_suficiente`).
-3. Guarda `eval_p5 = {voto_comite, comentarios_tecnicos, info_suficiente, aplica_ley_id, instrumento_corfo_seleccionado, enfoque_postulacion, compuerta}` y pon `meta.paso_actual = "EVAL_P5"`.
-4. **Actúa según la compuerta:**
-   - **GO** → informa que se habilita la **Fase 2: Formulación** (FORM_W1…W5).
-   - **PIVOT** → el caso vuelve a EVAL_P4 (Deep Research #2) con los comentarios del comité — es un problema de **estado del arte** (falta evidencia técnica).
-   - **DEVOLVER** (C6) → **info insuficiente**: se agenda **una reunión con el cliente** para completar el entendimiento (típicamente del modelo de negocio), **NO** un nuevo Deep Research. No es PIVOT.
-   - **NO-GO** → se notifica al cliente con informe técnico de por qué no aplica (y, si aplica, las sugerencias de reencuadre); fin del flujo.
+   Guarda la lista en `indicadores[]` (`{indicador, valor, umbral, estado}`).
+2. Registra `comentarios_revision[]` (observaciones del consultor / revisor par) e
+   `info_suficiente` (bool; default true — ponlo en false solo si faltan datos base para
+   evaluar).
+3. **Calcula la compuerta con el motor**:
+   ```bash
+   python3 -c "import sys, json; sys.path.insert(0,'motor-reglas'); import reglas; \
+   ind=<indicadores como lista>; \
+   print(json.dumps(reglas.compuerta_viabilidad(ind, info_suficiente=<bool>, \
+   punto_equilibrio_clp=<modelo_negocio.unit_economics.punto_equilibrio_clp>, \
+   som_clp=<investigacion_mercado.tamano_mercado.som_clp>, \
+   resultado_optimista_final_clp=<resultado del último año del escenario 'optimista'>), ensure_ascii=False, indent=2))"
+   ```
+   Guarda `compuerta` (**SÓLIDO / AJUSTAR / INVIABLE / DEVOLVER**) y los `motivos` del motor
+   en `comentarios_revision`.
+4. Si la compuerta es **AJUSTAR**, poblá `palancas_ajuste[]` = `{ palanca (pricing/segmento/
+   canal/estructura_costos/cac/retencion/otro), hipotesis, impacto_esperado }` — **a modo de
+   sugerencia**: el consultor y el cliente deciden y pueden descartar. No cambian el
+   veredicto por sí solas.
+5. Guarda `revision_viabilidad = {indicadores, comentarios_revision, info_suficiente,
+   compuerta, palancas_ajuste}` y pon `meta.paso_actual = "EVAL_P5"`.
+6. **Actúa según la compuerta:**
+   - **SÓLIDO** → se habilita la **Fase 2** (redacción). Si el fondo tiene Fase 1 CORFO
+     (Crea y Valida, Innova Alta Tecnología) → `mn-form-perfil`; si no → `mn-form-w1`.
+   - **AJUSTAR** → vuelve a **EVAL_P4** con las `palancas_ajuste`: mover pricing / segmento /
+     canal / estructura de costos y **recalcular** unit economics y proyección. Es un
+     problema del modelo, no del mercado.
+   - **DEVOLVER** → **info insuficiente** (faltan datos del cliente para modelar): se agenda
+     **una reunión con el cliente**; cuando llegue el input a `entradas/`, se re-corre
+     **EVAL_P3**. NO es AJUSTAR.
+   - **INVIABLE** → el modelo no cierra ni con supuestos optimistas razonables: informe al
+     cliente con los `motivos` del motor; fin del flujo.
 
-**DoD:** acta registrada, compuerta calculada por el motor, y la acción correspondiente comunicada. Valida y renderiza.
+**DoD:** indicadores y compuerta **calculados por el motor**; `palancas_ajuste` si es
+AJUSTAR; acción comunicada. Valida y renderiza.
 
-> Regla dura (Índice Maestro): no se inicia FORM_W1 si la compuerta no es **GO**.
+> Regla dura: no se inicia la Fase 2 (`FORM_W1`) si la compuerta no es **SÓLIDO**.
