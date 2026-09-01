@@ -18,7 +18,7 @@ falta para seguir. El `expediente.md` es la proyección completa y generada; el 
 hoja de entrada. Se escribe/actualiza al cerrar un bloque de trabajo o al cambiar el estado
 del caso.
 
-- **Arranca vacío.** Se crea una postulación con el skill `gtf-nuevo-proyecto` (que crea el buzón `entradas/`).
+- **Arranca vacío.** Se crea una postulación con el skill `mn-nuevo-proyecto` (que crea el buzón `entradas/`).
 - **El consultor deja los inputs en `entradas/`** (entre pasos y sesiones); los pasos que necesitan input del cliente buscan ahí.
 - Los datos de cliente son **confidenciales**: las carpetas de postulaciones reales están **gitignoreadas** (no se versionan).
 - Fixtures de prueba (caso ficticio) NO van aquí — viven en [`../../desarrollo/pruebas/`](../../desarrollo/pruebas/).

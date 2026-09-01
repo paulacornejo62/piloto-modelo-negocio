@@ -26,6 +26,6 @@ Corre Claude Code **desde `sistema/`** para que cargue el navegador y los skills
 ```bash
 cd sistema && claude
 ```
-La primera vez, Claude Code pide aprobar el MCP server. Luego el orquestador (`gtf-orquestar`) puede recorrer el flujo con Deep Research real + QA de veracidad.
+La primera vez, Claude Code pide aprobar el MCP server. Luego el orquestador (`mn-orquestar`) puede recorrer el flujo con Deep Research real + QA de veracidad.
 
 > **Búsqueda profunda por API** (Exa/Tavily): opcional, no incluida (decisión de no usarla por ahora). Si se adopta, se agrega su MCP al `.mcp.json` con su API key y se documenta aquí.

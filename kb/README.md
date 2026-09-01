@@ -49,6 +49,6 @@ python3 tools/kb.py autocablear   # deriva aristas del grafo desde las referenci
 python3 tools/kb.py export        # grafo a Mermaid (para visualizar)
 ```
 > **Grafo (GTF-19, idea de GBrain):** enlaza fichas relacionadas en el cuerpo con `[[otra-ficha-id]]` y corre `autocablear` — la arista se crea sola. La adyacencia por **tópico compartido** ya vive en `topicos.json` (no se materializa como arista). `salud` reporta las **brechas** de la KB (qué falta cubrir).
-**Agregar una fuente** (URL → ficha clasificada + dedup): skill `gtf-kb-agregar`.
+**Agregar una fuente** (URL → ficha clasificada + dedup): skill `mn-kb-agregar`.
 - **Consulta** (en Deep Research): `buscar` para traer conocimiento análogo previo de cualquier proyecto.
 - **Enriquecimiento con dedup**: antes de crear una ficha, corre `dedup`; si hay similar, **enlaza/actualiza** (agrega el proyecto a `proyectos:` y una arista) en vez de duplicar. La KB es transversal: el aprendizaje se acumula entre postulaciones.

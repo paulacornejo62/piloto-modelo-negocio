@@ -43,7 +43,7 @@ python3 tools/postulacion.py sync-drive <tenant>            # espejo a Drive: cr
 ```
 Los documentos del **sistema** (formulario, estado del arte, plan de trabajo, arancel) se marcan solos a medida que el flujo los produce. En fondos CORFO, los ítems `[confirmar con GT]` deben validarse contra las bases del fondo antes de cerrar el paquete.
 
-**Espejo a Drive (on-demand).** La carpeta se **vincula al inicio** (`vincular`, también lo hace `gtf-nuevo-proyecto`) y queda en `meta.drive_carpeta`. `sync-drive` crea bajo ella una raíz por tenant + una subcarpeta por documento, y **sube los archivos** que estén en `proyectos/<tenant>/postulacion/<carpeta>/` (local = fuente de verdad; lo ya subido se omite para no duplicar). Requiere `gws` autenticado. Si no hay carpeta vinculada, pásala con `--parent <folderId>`.
+**Espejo a Drive (on-demand).** La carpeta se **vincula al inicio** (`vincular`, también lo hace `mn-nuevo-proyecto`) y queda en `meta.drive_carpeta`. `sync-drive` crea bajo ella una raíz por tenant + una subcarpeta por documento, y **sube los archivos** que estén en `proyectos/<tenant>/postulacion/<carpeta>/` (local = fuente de verdad; lo ya subido se omite para no duplicar). Requiere `gws` autenticado. Si no hay carpeta vinculada, pásala con `--parent <folderId>`.
 
 ## Realidad de los buscadores de patentes (hallazgo GTF-14)
 Probados con navegador real (2026-06-23):

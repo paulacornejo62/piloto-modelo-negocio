@@ -8,13 +8,13 @@
 sistema/
 ├── GUIA-USUARIO.md         ← punto de entrada para el consultor (instalar + usar)
 ├── .claude/skills/         skills nativos Claude Code
-│   ├── gtf-nuevo-proyecto/   onboarding: crea una postulación (tenant) y guía al usuario
-│   ├── gtf-orquestar/        orquestador (recorre el flujo)
-│   ├── gtf-eval-reunion-1/   EVAL_P1 — Reunión #1 → Perfil Preliminar
-│   ├── gtf-eval-deep-research-1/  EVAL_P2 — Deep Research #1 → Minuta v1 + fichas KB
-│   ├── gtf-qa-veracidad/     QA de veracidad — verifica hallazgos, descarta alucinaciones
-│   └── gtf-estado/           estado / resumen / retomar de una postulación o la cartera
-├── .claude/agents/         agentes reutilizables: gtf-deep-researcher · gtf-qa-veracidad
+│   ├── mn-nuevo-proyecto/   onboarding: crea una postulación (tenant) y guía al usuario
+│   ├── mn-orquestar/        orquestador (recorre el flujo)
+│   ├── mn-eval-reunion-1/   EVAL_P1 — Reunión #1 → Perfil Preliminar
+│   ├── mn-eval-deep-research-1/  EVAL_P2 — Deep Research #1 → Minuta v1 + fichas KB
+│   ├── mn-qa-veracidad/     QA de veracidad — verifica hallazgos, descarta alucinaciones
+│   └── mn-estado/           estado / resumen / retomar de una postulación o la cartera
+├── .claude/agents/         agentes reutilizables: mn-deep-researcher · mn-qa-veracidad
 ├── tools/                  utilidades CLI: browse.mjs (navegador), fuentes.json/.py (registro de
 │                            fuentes), kb.py (base de conocimiento), estado/bitacora/panel (flujo)
 ├── expediente.schema.json  contrato del estado (JSON Schema, con evidencia/cobertura)
@@ -33,7 +33,7 @@ sistema/
 ## Flujo
 
 1. Crea el tenant: carpeta en `proyectos/<tenant>/` con el buzón `entradas/` (deja ahí las notas de la Reunión #1 y cualquier doc del cliente) y un `expediente.json` semilla (`{"meta":{"tenant":"<t>","paso_actual":"INICIO"}}`).
-2. **Invoca el orquestador** (skill `gtf-orquestar`) apuntando al tenant. Él decide el paso según `meta.paso_actual`, invoca el subagente del paso, valida y renderiza.
+2. **Invoca el orquestador** (skill `mn-orquestar`) apuntando al tenant. Él decide el paso según `meta.paso_actual`, invoca el subagente del paso, valida y renderiza.
    - `INICIO` → EVAL_P1 (perfil preliminar)
    - `EVAL_P1` → EVAL_P2 (deep research + fichas KB)
 3. Tras cada paso, el estado queda en `expediente.json` y la vista legible en `expediente.md`.
@@ -56,4 +56,4 @@ El Deep Research (EVAL_P2/P4) **exige navegación real**, no WebSearch (ver arqu
 - **Pendiente (GTF-12)**: opcionalmente, MCP de búsqueda profunda por API (Exa/Tavily) para recuperación semántica con texto completo (requiere API key).
 
 ## Sin datos de ejemplo
-El sistema **arranca limpio**: `proyectos/` vacío y KB sin fichas. El fixture de prueba (caso ficticio `_ejemplo`) vive en [`../desarrollo/pruebas/`](../desarrollo/pruebas/), no aquí — es material de *nuestro* desarrollo, no del producto. Para empezar una postulación real usa `gtf-nuevo-proyecto`.
+El sistema **arranca limpio**: `proyectos/` vacío y KB sin fichas. El fixture de prueba (caso ficticio `_ejemplo`) vive en [`../desarrollo/pruebas/`](../desarrollo/pruebas/), no aquí — es material de *nuestro* desarrollo, no del producto. Para empezar una postulación real usa `mn-nuevo-proyecto`.
