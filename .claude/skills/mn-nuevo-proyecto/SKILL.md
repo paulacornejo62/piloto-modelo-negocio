@@ -1,60 +1,90 @@
 ---
 name: mn-nuevo-proyecto
-description: Inicia una nueva postulación de financiamiento (tenant). Crea la carpeta del proyecto con el expediente semilla y una plantilla para las notas de la Reunión #1, y le dice al consultor qué hacer a continuación. Invocar al empezar una postulación nueva, p.ej. "nuevo proyecto de financiamiento para <Empresa>".
+description: Inicia un nuevo caso de modelo de negocio (tenant). Crea la carpeta del caso con el expediente semilla y las plantillas del buzón de entrada (notas de reunión, información del proyecto de innovación), y le dice al consultor qué hacer a continuación. Invocar al empezar un caso nuevo, p.ej. "nuevo caso de modelo de negocio para <Empresa>".
 ---
 
-# Nuevo proyecto de financiamiento
+# Nuevo caso de modelo de negocio
 
-Guía al consultor para arrancar una postulación. No hace análisis; solo prepara el espacio de trabajo aislado del proyecto y orienta.
+Guía al consultor para arrancar un caso. No hace análisis; solo prepara el espacio de
+trabajo aislado y orienta.
 
 ## Pasos
-1. **Pide los datos mínimos** si no los dio: nombre de la empresa y un slug corto (kebab-case, sin tildes/espacios, p.ej. `acuitech`). Si te dan el nombre, propone tú el slug. Pregunta también, **si se sabe a priori** (si no, "por definir" y lo resuelve el flujo):
-   - **Tipo de proyecto** (p.ej. desarrollo de producto, mejora de proceso).
-   - **Fondo/instrumento objetivo**: Ley I+D · Crea y Valida · Consolida y Expande · Capital Humano · Innova Alta Tecnología · por definir.
-   - **Carpeta de Drive del cliente** (URL o id): dónde el equipo GT reúne los documentos. Se **vincula ahora** para que, al entrar a formulación, el paquete de postulación se espeje ahí y suba los entregables. Si no la tienen aún, se puede vincular después.
+1. **Pide los datos mínimos** si no los dio: nombre de la empresa y un slug corto
+   (kebab-case, sin tildes/espacios, p.ej. `acuitech`). Si te dan el nombre, propón tú el
+   slug. Pregunta también, **si se sabe a priori** (si no, "por definir" y lo resuelve el
+   flujo):
+   - **Fondo objetivo** (obligatorio antes de la Fase 2): `Crea y Valida` · `Innova Alta
+     Tecnología` · `Consolida y Expande` · `Capital Humano` · `por definir`.
+   - **Tipo de negocio**: software/SaaS, hardware, servicios, marketplace, deep tech,
+     manufactura… (ajusta qué umbrales de unit economics son razonables).
+   - **Carpeta de Drive del cliente/proyecto** (URL o id): dónde se reúnen los documentos.
+     Se **vincula ahora** para que, al entrar a Fase 2, los entregables del modelo de
+     negocio se espejen ahí. Si no la tienen aún, se puede vincular después.
 2. **Crea la carpeta** `proyectos/<slug>/` (si ya existe, avisa y no la pises).
-3. **Crea `proyectos/<slug>/expediente.json`** semilla (incluye tipo y fondo si se supieron; si no, "por definir"):
+3. **Crea `proyectos/<slug>/expediente.json`** semilla:
    ```json
-   { "meta": { "tenant": "<slug>", "creado": "<fecha>", "actualizado": "<fecha>", "paso_actual": "INICIO", "tipo_proyecto": "<tipo o 'por definir'>", "instrumento_objetivo": "<fondo o 'por definir'>" } }
+   { "meta": { "tenant": "<slug>", "creado": "<fecha>", "actualizado": "<fecha>", "paso_actual": "INICIO", "cliente_razon_social": "<empresa>", "tipo_negocio": "<tipo o 'por definir'>", "instrumento_objetivo": "<fondo o 'por definir'>" } }
    ```
    (usa la fecha que te dé el usuario/sistema).
-4. **Crea el BUZÓN de entrada** `proyectos/<slug>/entradas/` — aquí caen todos los inputs del cliente (reuniones, documentos, transcripciones) y los agentes los buscan. Crea dentro:
+4. **Crea el BUZÓN de entrada** `proyectos/<slug>/entradas/` — aquí caen todos los inputs
+   del cliente y los agentes los buscan. Crea dentro:
    - `entradas/README.md`:
      ```markdown
-     # entradas/ — buzón del proyecto
-     Deja aquí TODO input: notas/transcripciones de reuniones, documentos del cliente
-     (specs, estudios previos, PDFs), correos relevantes. Los agentes buscan aquí los
-     insumos de cada paso. Nombra los archivos claro (reunion-1.md, reunion-2.md,
-     estudio-previo.pdf…). Confidencial: gitignoreado.
+     # entradas/ — buzón del caso
+     Deja aquí TODO input: notas/transcripciones de reuniones, la descripción del proyecto
+     de innovación, datos comerciales (precios, costos, clientes actuales, estados
+     financieros), estudios previos. Los agentes buscan aquí los insumos de cada paso.
+     Nombra los archivos claro (reunion-1.md, proyecto.md, precios.xlsx…).
+     Confidencial: gitignoreado.
      ```
-   - `entradas/reunion-1.md` con la plantilla para pegar las notas de la Reunión #1:
+   - `entradas/reunion-1.md` — plantilla de la primera reunión:
      ```markdown
      # Reunión #1 — <empresa>
 
-     > Pega aquí las notas/transcripción de la primera reunión con el cliente.
-     > Útil incluir: empresa (razón social, tamaño, inicio de actividades), contacto,
-     > el problema/oportunidad, el resultado esperado y el presupuesto estimado.
+     > Pega aquí las notas/transcripción de la primera reunión.
+     > Útil incluir: la empresa (razón social, tamaño, inicio de actividades), contacto,
+     > qué vende o pretende vender, a quién le vende hoy, por qué canal, el resultado de
+     > negocio que busca con el proyecto, y el presupuesto estimado.
 
      <!-- pega aquí -->
      ```
-   - `entradas/historia-previa.md` para recuperar antecedentes (C4) — el caso casi nunca parte de cero:
+   - `entradas/proyecto.md` — la información del **proyecto de innovación** que sustenta el
+     modelo:
      ```markdown
-     # Historia previa — <empresa>
+     # Proyecto de innovación — <empresa>
 
-     > Si el proyecto tiene antecedentes, déjalos aquí (o pega los documentos en entradas/).
-     > - Prevaluaciones o postulaciones anteriores (a este u otro fondo) y su resultado.
-     > - Alcance ORIGINAL de la idea, antes de estrecharse.
-     > - Qué se sacó del alcance y por qué (costo, riesgo, "no era financiable").
-     >   Ojo: lo descartado suele ser donde vivía el I+D — vale la pena revisarlo.
+     > El modelo de negocio se construye sobre este proyecto. Deja aquí (o pega los
+     > documentos en entradas/):
+     > - Qué se desarrolla (producto/servicio/proceso) y la propuesta técnica.
+     > - Estado de desarrollo / TRL, y qué se lograría con el subsidio.
+     > - Resultado esperado y a qué mercado apunta.
+     > Muchas cifras del mercado futuro serán supuestos — está bien, se marcan como tales.
 
      <!-- pega aquí, o deja los documentos en entradas/ -->
      ```
-5. **Vincula la carpeta de Drive** (si la dieron): `python3 tools/postulacion.py vincular <slug> "<url-o-id>"` (guarda el id en `meta.drive_carpeta`). Es la raíz donde luego el paquete de postulación se espeja y se suben los documentos. Si no la dieron, sáltalo y recuérdalo como pendiente.
-6. **Valida** que el expediente semilla esté OK: `python3 render/render.py <slug> --validar`.
-7. **Orienta al usuario** con los próximos pasos, claros y concretos:
-   - "Pega las notas de la Reunión #1 en `proyectos/<slug>/entradas/reunion-1.md`, y deja cualquier otro documento del cliente en `entradas/`."
-   - "Si el proyecto tiene **antecedentes** (postulaciones/evaluaciones previas, un alcance anterior), déjalos en `entradas/historia-previa.md` o como documentos — no partimos de cero."
-   - "Cuando esté, pídeme: **orquesta `<slug>`** — arrancaré por EVAL_P1 (Perfil) y seguiré con el Deep Research."
-   - Recuérdale que los datos del cliente son confidenciales y quedan aislados en su carpeta (no se versionan, ver `.gitignore`).
+   - `entradas/datos-comerciales.md` — lo que ya se sabe del negocio actual:
+     ```markdown
+     # Datos comerciales — <empresa>
 
-**Importante:** un proyecto por postulación; nunca mezcles datos de dos clientes en el mismo tenant.
+     > Si la empresa ya opera, deja aquí lo que tenga:
+     > - Precios actuales y forma de cobro.
+     > - Costos (fijos y variables) y márgenes si los conoce.
+     > - Número de clientes actuales, ventas, tracción.
+     > - Estados financieros / listas de precios como documentos en entradas/.
+
+     <!-- pega aquí -->
+     ```
+5. **Vincula la carpeta de Drive** (si la dieron):
+   `python3 tools/postulacion.py vincular <slug> "<url-o-id>"` (guarda el id en
+   `meta.drive_carpeta`). Si no la dieron, sáltalo y recuérdalo como pendiente.
+6. **Valida** el expediente semilla: `python3 render/render.py <slug> --validar`.
+7. **Orienta al usuario** con los próximos pasos, claros y concretos:
+   - "Pega las notas de la Reunión #1 en `proyectos/<slug>/entradas/reunion-1.md`."
+   - "Deja la descripción del proyecto de innovación en `entradas/proyecto.md` y los datos
+     comerciales que tengas en `entradas/datos-comerciales.md` (o los documentos en `entradas/`)."
+   - "Cuando esté, pídeme: **orquesta `<slug>`** — arrancaré por EVAL_P1 (perfil comercial)
+     y seguiré con la investigación de mercado."
+   - Recuérdale que los datos del cliente son confidenciales y quedan aislados en su carpeta
+     (no se versionan, ver `.gitignore`).
+
+**Importante:** un caso por proyecto; nunca mezcles datos de dos clientes en el mismo tenant.

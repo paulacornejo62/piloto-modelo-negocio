@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Consulta de la base de conocimiento transversal (papers/patentes).
+"""Consulta de la base de conocimiento de mercado (informes, comparables, benchmarks).
 
 La KB (`kb/indice.json` + `kb/fichas/`) es la única capa COMPARTIDA entre proyectos:
 se consulta en cada Deep Research y se enriquece en cada uno. Esta herramienta la
@@ -39,7 +39,7 @@ def listar() -> None:
     print(f"{len(d['nodos'])} fichas · {len(d.get('aristas', []))} relaciones\n")
     for n in d["nodos"]:
         print(f"- [{n.get('tipo','?')}] {n['id']} — {n.get('titulo','')[:80]}")
-        print(f"    tema: {n.get('tema','')} · disciplina: {n.get('disciplina','')} · proyectos: {n.get('proyectos',[])}")
+        print(f"    tema: {n.get('tema','')} · sector: {n.get('sector','')} · proyectos: {n.get('proyectos',[])}")
 
 
 def buscar(args) -> None:
@@ -48,7 +48,7 @@ def buscar(args) -> None:
     for n in d["nodos"]:
         if args.tipo and n.get("tipo") != args.tipo:
             continue
-        if args.area and args.area.lower() not in n.get("area_oecd", "").lower():
+        if args.sector and args.sector.lower() not in n.get("sector", "").lower():
             continue
         if args.topico and not any(args.topico.lower() in t.lower() for t in n.get("topicos", [])):
             continue
@@ -159,7 +159,7 @@ def _frontmatter_valor(path, clave: str):
 
 
 def salud() -> None:
-    """Diagnóstico del grafo: huérfanos, cobertura por tipo/disciplina, fichas faltantes."""
+    """Diagnóstico del grafo: huérfanos, cobertura por tipo/sector, fichas faltantes."""
     d = _cargar()
     nodos = d["nodos"]
     aristas = d.get("aristas", [])
@@ -171,7 +171,7 @@ def salud() -> None:
     from collections import Counter
     print(f"Fichas: {len(nodos)} · Relaciones: {len(aristas)}")
     print("Por tipo:", dict(Counter(n.get("tipo", "?") for n in nodos)))
-    print("Por área OCDE:", dict(Counter(n.get("area_oecd", "?") for n in nodos)))
+    print("Por sector:", dict(Counter(n.get("sector", "?") for n in nodos)))
     tops = Counter(t for n in nodos for t in n.get("topicos", []))
     print(f"Tópicos ({len(tops)}):", dict(tops.most_common(8)))
     prof = Counter(_frontmatter_valor(_ficha_path(n["id"]), "profundidad_lectura") or "?" for n in nodos)
@@ -181,19 +181,20 @@ def salud() -> None:
     print(f"Nodos sin tópico: {sin_topico or '—'}")
     print(f"Nodos sin proyecto: {sin_proyecto or '—'}")
 
-    # --- Gap analysis: qué NO cubre bien la KB (inspirado en GBrain, GTF-19) ---
+    # --- Gap analysis: qué NO cubre bien la KB ---
     from collections import defaultdict
-    tipos_por_area = defaultdict(set)
+    tipos_por_sector = defaultdict(set)
     for n in nodos:
-        tipos_por_area[n.get("area_oecd", "?")].add(n.get("tipo"))
+        tipos_por_sector[n.get("sector", "?")].add(n.get("tipo"))
     delgados = sorted(t for t, c in tops.items() if c == 1)
-    sin_patente = sorted(a for a, ts in tipos_por_area.items() if "paper" in ts and "patente" not in ts)
+    sin_comparable = sorted(s for s, ts in tipos_por_sector.items()
+                            if "informe-mercado" in ts and not ({"comparable", "benchmark"} & ts))
     parciales = [n["id"] for n in nodos
-                 if _frontmatter_valor(_ficha_path(n["id"]), "profundidad_lectura") in ("abstract", "metadata")]
+                 if _frontmatter_valor(_ficha_path(n["id"]), "profundidad_lectura") in ("resumen", "metadata")]
     print("\nBrechas (gap analysis — qué falta cubrir):")
     print(f"  · Tópicos delgados (1 sola ficha): {delgados or '—'}")
-    print(f"  · Áreas con papers pero SIN patente (revisar prior art): {sin_patente or '—'}")
-    print(f"  · Fichas solo abstract/metadata (subir a full-text): {len(parciales)}"
+    print(f"  · Sectores con informe de mercado pero SIN comparable/benchmark: {sin_comparable or '—'}")
+    print(f"  · Fichas solo resumen/metadata (subir a full-text): {len(parciales)}"
           + (f" → {parciales[:6]}{'…' if len(parciales) > 6 else ''}" if parciales else ""))
     print(f"  · Huérfanos en el grafo (correr `kb.py autocablear`): {len(huerfanos)}")
 
@@ -212,11 +213,11 @@ def export_mermaid() -> None:
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Consulta de la base de conocimiento GTF.")
+    ap = argparse.ArgumentParser(description="Consulta de la base de conocimiento de mercado.")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("listar")
     b = sub.add_parser("buscar")
-    b.add_argument("--tema"); b.add_argument("--tipo"); b.add_argument("--area")
+    b.add_argument("--tema"); b.add_argument("--tipo"); b.add_argument("--sector")
     b.add_argument("--topico"); b.add_argument("--texto")
     dd = sub.add_parser("dedup"); dd.add_argument("titulo")
     v = sub.add_parser("ver"); v.add_argument("id")

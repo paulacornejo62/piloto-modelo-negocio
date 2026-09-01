@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Registro de fuentes de consulta (papers/patentes) — fácil de manejar.
+"""Registro de fuentes de investigación de mercado — fácil de manejar.
 
 Lee `tools/fuentes.json`. Permite ver todas las fuentes, solo las usables, o
 validar el archivo. Para AGREGAR una fuente, edita `fuentes.json` (no este script).
+Las categorías son las claves del JSON que no empiezan con "_".
 
 Uso:
     python3 tools/fuentes.py listar       # todas, por categoría y estado
@@ -24,10 +25,14 @@ def _cargar() -> dict:
     return json.loads(CFG.read_text(encoding="utf-8"))
 
 
+def _categorias(d: dict) -> list[str]:
+    return [k for k in d if not k.startswith("_")]
+
+
 def listar(solo_usables: bool = False) -> None:
     d = _cargar()
-    for cat in ("papers", "patentes"):
-        print(f"\n== {cat.upper()} ==")
+    for cat in _categorias(d):
+        print(f"\n== {cat.replace('_', ' ').upper()} ==")
         for f in d.get(cat, []):
             est = f.get("estado", "?")
             if solo_usables and est not in USABLES:
@@ -43,7 +48,7 @@ def listar(solo_usables: bool = False) -> None:
 def resumen() -> None:
     from collections import Counter
     d = _cargar()
-    for cat in ("papers", "patentes"):
+    for cat in _categorias(d):
         fuentes = d.get(cat, [])
         cnt = Counter(f.get("estado", "?") for f in fuentes)
         usables = sum(v for k, v in cnt.items() if k in USABLES)
@@ -55,7 +60,7 @@ def validar() -> None:
     d = _cargar()
     req = {"id", "nombre", "tipo", "estado"}
     errs = []
-    for cat in ("papers", "patentes"):
+    for cat in _categorias(d):
         for f in d.get(cat, []):
             faltan = req - set(f)
             if faltan:

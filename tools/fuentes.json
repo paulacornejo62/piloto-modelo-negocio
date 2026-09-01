@@ -1,24 +1,26 @@
 {
-  "_descripcion": "Registro ÚNICO de fuentes de consulta del estado del arte (papers/patentes). Fácil de manejar: para sumar una fuente, agrega una entrada aquí. El Deep Research recorre las fuentes con estado 'activo'/'parcial' y declara honestamente la cobertura de cada una.",
-  "_como_agregar": "Copia una entrada y completa id/nombre/tipo/estado/como. Si es tipo 'api' o 'mcp', configúrala además en sistema/.mcp.json (o como variable de entorno) y cambia su estado a 'activo'. Las del equipo GT (catálogo) están en desarrollo/contexto/resumenes/ley-id-metodologia/estado-del-arte.md.",
-  "papers": [
-    {"id": "pmc", "nombre": "PubMed Central (PMC)", "tipo": "web", "estado": "activo", "como": "WebFetch sobre pmc.ncbi.nlm.nih.gov/articles/PMC<ID>/", "nota": "FULL-TEXT open access — el caballo de batalla para papers; da profundidad_lectura=full-text"},
-    {"id": "europepmc", "nombre": "Europe PMC", "tipo": "web", "estado": "activo", "como": "WebFetch/WebSearch sobre europepmc.org", "nota": "full-text open access + abstracts; alternativa a PMC"},
-    {"id": "open_access", "nombre": "Revistas open access (PLOS, Frontiers, MDPI…)", "tipo": "web", "estado": "activo", "como": "WebFetch a la URL del artículo", "nota": "full-text directo cuando la revista es OA"},
-    {"id": "google_scholar", "nombre": "Google Académico", "tipo": "navegador", "estado": "intermitente", "como": "node tools/browse.mjs scholar \"<query>\"", "nota": "puede bloquear bots (unusual traffic)"},
-    {"id": "pubmed", "nombre": "PubMed", "tipo": "web", "estado": "activo", "como": "WebFetch sobre pubmed.ncbi.nlm.nih.gov/<PMID>/", "nota": "abstracts + metadata; si hay PMC<ID>, ir a PMC por el full-text"},
-    {"id": "ieee", "nombre": "IEEE Xplore", "tipo": "web", "estado": "parcial", "como": "WebSearch site:ieee.org", "nota": "full-text tras paywall"},
-    {"id": "sciencedirect", "nombre": "ScienceDirect", "tipo": "web", "estado": "parcial", "como": "WebSearch site:sciencedirect.com", "nota": "403/paywall; metadata indexada"},
-    {"id": "springer", "nombre": "Springer Nature Link", "tipo": "web", "estado": "parcial", "como": "WebSearch site:link.springer.com"},
-    {"id": "exa", "nombre": "Exa", "tipo": "mcp", "estado": "requiere_key", "como": "MCP Exa en sistema/.mcp.json (EXA_API_KEY)", "nota": "búsqueda semántica + texto completo"},
-    {"id": "semantic_scholar", "nombre": "Semantic Scholar", "tipo": "api", "estado": "requiere_key", "como": "API api.semanticscholar.org (S2_API_KEY; hay tier público con límite)", "nota": "grafo de citas, gratis"}
+  "_descripcion": "Registro UNICO de fuentes de investigacion de MERCADO (tamano, competidores, precios, benchmarks). Facil de manejar: para sumar una fuente, agrega una entrada. El Deep Research recorre las fuentes con estado 'activo'/'parcial'/'intermitente' y declara honestamente la cobertura de cada una.",
+  "_como_agregar": "Copia una entrada y completa id/nombre/tipo/estado/como. Si es tipo 'api'/'mcp', configurala ademas en .mcp.json y cambia su estado a 'activo'.",
+  "_estados": "activo = accesible sin credenciales | parcial = solo resumen/metadata (informe de pago) | intermitente = a veces bloquea bots | requiere_key = necesita API key | manual = consulta manual",
+  "mercado_y_estadisticas": [
+    {"id": "ine", "nombre": "INE Chile", "tipo": "web", "estado": "activo", "como": "WebFetch/WebSearch sobre ine.gob.cl", "nota": "estadisticas oficiales: poblacion, empleo, ENIA (industria), comercio, IPC. Base para dimensionar bottom-up en Chile"},
+    {"id": "banco_central", "nombre": "Banco Central de Chile", "tipo": "web", "estado": "activo", "como": "WebFetch sobre bcentral.cl y si.bcentral.cl (base de datos estadistica)", "nota": "cuentas nacionales, PIB sectorial, tipo de cambio, series economicas"},
+    {"id": "mercado_publico", "nombre": "Mercado Publico / ChileCompra", "tipo": "web", "estado": "activo", "como": "WebFetch sobre mercadopublico.cl (buscador de licitaciones y ordenes de compra)", "nota": "senal de demanda y precios de referencia cuando el comprador es el Estado"},
+    {"id": "cmf", "nombre": "CMF Chile (ex SVS)", "tipo": "web", "estado": "activo", "como": "WebFetch sobre cmfchile.cl", "nota": "estados financieros y memorias de empresas listadas: margenes reales de la industria, tamano de actores"},
+    {"id": "cepal_ocde_bm", "nombre": "CEPAL / OCDE / Banco Mundial", "tipo": "web", "estado": "activo", "como": "WebFetch sobre cepalstat.cepal.org, data.oecd.org, data.worldbank.org", "nota": "benchmarks regionales e internacionales, comparaciones de mercado"},
+    {"id": "gremios", "nombre": "Gremios y asociaciones sectoriales", "tipo": "web", "estado": "activo", "como": "WebSearch del gremio del rubro (SOFOFA, SNA, Asech, camaras, asociaciones de productores)", "nota": "cifras de industria, numero de empresas del sector, estudios propios"},
+    {"id": "corfo_estudios", "nombre": "Estudios CORFO / ecosistema de innovacion", "tipo": "web", "estado": "activo", "como": "WebSearch site:corfo.cl y repositorios de innovacion (Fundacion Chile, Endeavor, Startup Chile)", "nota": "estudios de mercado y de brechas por sector, util para proyectos de innovacion"}
   ],
-  "patentes": [
-    {"id": "google_patents", "nombre": "Google Patents", "tipo": "navegador", "estado": "activo", "como": "node tools/browse.mjs gp \"<query>\" [PAIS]", "nota": "MOTOR PRIMARIO; agrega familias EP/WO/US/CN/CL"},
-    {"id": "epo_ops", "nombre": "EPO Open Patent Services", "tipo": "mcp", "estado": "requiere_key", "como": "MCP/REST OPS en sistema/.mcp.json (OPS_KEY; registro OAuth gratuito)", "nota": "patentes globales oficiales — cierra Espacenet de forma legítima"},
-    {"id": "espacenet", "nombre": "Espacenet (EPO)", "tipo": "navegador", "estado": "bloqueado", "como": "node tools/browse.mjs espacenet \"<query>\"", "nota": "Cloudflare; usar EPO OPS"},
-    {"id": "wipo_patentscope", "nombre": "WIPO PatentScope", "tipo": "navegador", "estado": "bloqueado", "como": "node tools/browse.mjs patentscope \"<query>\""},
-    {"id": "lens", "nombre": "Lens.org", "tipo": "navegador", "estado": "parcial", "nota": "carga, pero requiere sesión para resultados"},
-    {"id": "inapi", "nombre": "INAPI (Chile)", "tipo": "manual", "estado": "manual", "nota": "formulario ASP.NET; búsqueda manual para FTO de patentes chilenas"}
+  "industria_e_informes": [
+    {"id": "statista", "nombre": "Statista", "tipo": "web", "estado": "parcial", "como": "WebSearch site:statista.com", "nota": "muchas cifras clave visibles sin cuenta; el detalle esta tras pago. Citar dato + fecha + fuente primaria que Statista referencia"},
+    {"id": "prensa_negocios", "nombre": "Prensa de negocios Chile", "tipo": "web", "estado": "activo", "como": "WebSearch en df.cl (Diario Financiero), latercera.com/pulso, americaeconomia.com, bloomberglinea.com", "nota": "tamano de mercado, movimientos de competidores, precios; verificar medio y fecha"},
+    {"id": "informes_consultoras", "nombre": "Consultoras (resumenes publicos)", "tipo": "web", "estado": "parcial", "como": "WebSearch de comunicados de prensa de IBISWorld, Euromonitor, Frost & Sullivan, McKinsey, Deloitte", "nota": "el informe completo es de pago; el press release suele traer la cifra titular con su ano"},
+    {"id": "sii_estadisticas", "nombre": "SII — estadisticas de empresas", "tipo": "web", "estado": "activo", "como": "WebFetch sobre sii.cl (estadisticas de empresas por rubro, tramo de ventas y region)", "nota": "numero de empresas y ventas por sector economico (codigo de actividad): insumo bottom-up del SAM"}
+  ],
+  "competencia_y_precios": [
+    {"id": "sitios_competidores", "nombre": "Sitios y precios de competidores", "tipo": "navegador", "estado": "activo", "como": "node tools/browse.mjs open \"<url>\"", "nota": "planes, precios publicados, clientes declarados, casos de exito. Fuente primaria de pricing de referencia"},
+    {"id": "crunchbase", "nombre": "Crunchbase", "tipo": "web", "estado": "parcial", "como": "WebSearch site:crunchbase.com", "nota": "financiamiento, tamano y foco de competidores/startups; el detalle esta tras cuenta"},
+    {"id": "linkedin_empresas", "nombre": "LinkedIn (paginas de empresa)", "tipo": "navegador", "estado": "intermitente", "como": "node tools/browse.mjs open \"<url>\"", "nota": "tamano de dotacion de un competidor (proxy de escala), mercados donde opera. Puede pedir login"},
+    {"id": "app_stores_reviews", "nombre": "App stores / reviews (G2, Capterra, Play, App Store)", "tipo": "web", "estado": "activo", "como": "WebSearch site:g2.com OR site:capterra.com del producto/competidor", "nota": "adopcion, satisfaccion, precios y comparativas entre competidores"}
   ]
 }

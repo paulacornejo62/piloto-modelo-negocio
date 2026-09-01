@@ -1,34 +1,32 @@
 {
-  "_descripcion": "Taxonomía de clasificación de la base de conocimiento. Anclada en estándares reconocidos (no inventada). Ampliable: si falta un subcampo/sección, agrégalo respetando el esquema.",
-  "_fuentes": {
-    "areas_oecd": "OECD Fields of Science and Technology (Manual de Frascati 2015) — usado también en la evaluación I+D.",
-    "ipc": "Clasificación Internacional de Patentes (WIPO) — secciones A–H; el código fino lo entrega Google Patents."
+  "_descripcion": "Taxonomía de clasificación de la base de conocimiento de MERCADO. Dos ejes: sector económico (define la carpeta de la ficha) y tipo de fuente. Ampliable: si falta un sector o un tipo, agrégalo respetando el esquema — no inventes variantes sueltas en las fichas.",
+  "sectores": {
+    "agroalimentario": {"nombre": "Agroalimentario", "slug": "agroalimentario", "incluye": "agricultura, ganadería, alimentos y bebidas procesados"},
+    "acuicultura-pesca": {"nombre": "Acuicultura y pesca", "slug": "acuicultura-pesca", "incluye": "salmonicultura, mitilicultura, pesca extractiva, insumos acuícolas"},
+    "mineria": {"nombre": "Minería", "slug": "mineria", "incluye": "extracción, procesamiento, proveedores de la minería"},
+    "manufactura-industria": {"nombre": "Manufactura e industria", "slug": "manufactura-industria", "incluye": "bienes industriales, maquinaria, envases, químicos"},
+    "energia": {"nombre": "Energía", "slug": "energia", "incluye": "generación, transmisión, eficiencia energética, combustibles, H2"},
+    "construccion-inmobiliario": {"nombre": "Construcción e inmobiliario", "slug": "construccion-inmobiliario", "incluye": "edificación, materiales, proptech"},
+    "transporte-logistica": {"nombre": "Transporte y logística", "slug": "transporte-logistica", "incluye": "carga, última milla, flotas, almacenaje"},
+    "tecnologia-software": {"nombre": "Tecnología y software", "slug": "tecnologia-software", "incluye": "SaaS, plataformas, IA, ciberseguridad, hardware TI"},
+    "salud-biotecnologia": {"nombre": "Salud y biotecnología", "slug": "salud-biotecnologia", "incluye": "dispositivos médicos, diagnóstico, biotech, salud digital"},
+    "comercio-retail": {"nombre": "Comercio y retail", "slug": "comercio-retail", "incluye": "retail físico y online, distribución, bienes de consumo"},
+    "servicios-financieros": {"nombre": "Servicios financieros", "slug": "servicios-financieros", "incluye": "banca, seguros, fintech, medios de pago"},
+    "turismo-servicios": {"nombre": "Turismo y servicios", "slug": "turismo-servicios", "incluye": "turismo, hotelería, servicios profesionales, educación"},
+    "transversal": {"nombre": "Transversal", "slug": "transversal", "incluye": "benchmarks e indicadores que aplican a cualquier sector (unit economics por modelo de negocio, multiples, CAC por canal)"}
   },
-  "areas_oecd": {
-    "1": {"nombre": "Ciencias Naturales", "slug": "1-naturales",
-          "subcampos": ["1.1 Matemáticas", "1.2 Ciencias de la computación e información", "1.3 Ciencias físicas", "1.4 Ciencias químicas", "1.5 Ciencias de la tierra y medioambientales", "1.6 Ciencias biológicas", "1.7 Otras ciencias naturales"]},
-    "2": {"nombre": "Ingeniería y Tecnología", "slug": "2-ingenieria-tecnologia",
-          "subcampos": ["2.1 Ingeniería civil", "2.2 Ingeniería eléctrica, electrónica e informática", "2.3 Ingeniería mecánica", "2.4 Ingeniería química", "2.5 Ingeniería de materiales", "2.6 Ingeniería médica", "2.7 Ingeniería ambiental", "2.8 Biotecnología ambiental", "2.9 Biotecnología industrial", "2.10 Nanotecnología", "2.11 Otras ingenierías y tecnologías"]},
-    "3": {"nombre": "Ciencias Médicas y de la Salud", "slug": "3-medicas-salud",
-          "subcampos": ["3.1 Medicina básica", "3.2 Medicina clínica", "3.3 Ciencias de la salud", "3.4 Biotecnología en salud", "3.5 Otras ciencias médicas"]},
-    "4": {"nombre": "Ciencias Agrícolas", "slug": "4-agricolas",
-          "subcampos": ["4.1 Agricultura, silvicultura y pesca", "4.2 Ciencia animal y lechera", "4.3 Ciencia veterinaria", "4.4 Biotecnología agrícola", "4.5 Otras ciencias agrícolas"]},
-    "5": {"nombre": "Ciencias Sociales", "slug": "5-sociales",
-          "subcampos": ["5.1 Psicología", "5.2 Economía y negocios", "5.3 Ciencias de la educación", "5.4 Sociología", "5.5 Derecho", "5.6 Ciencias políticas", "5.7 Geografía social y económica", "5.8 Comunicación y medios", "5.9 Otras ciencias sociales"]},
-    "6": {"nombre": "Humanidades", "slug": "6-humanidades",
-          "subcampos": ["6.1 Historia y arqueología", "6.2 Lenguas y literatura", "6.3 Filosofía, ética y religión", "6.4 Artes", "6.5 Otras humanidades"]}
+  "tipos": {
+    "informe-mercado": "Estudio o informe con tamaño de mercado, crecimiento, segmentación (consultora, gremio, prensa).",
+    "estadistica-oficial": "Serie o tabla de una fuente oficial (INE, Banco Central, SII, CMF, CEPAL).",
+    "comparable": "Perfil de una empresa comparable o competidor: qué ofrece, precio, escala, financiamiento.",
+    "benchmark": "Indicador de industria reutilizable: margen típico, CAC, LTV/CAC, ciclo de venta, múltiplo de valorización.",
+    "regulacion": "Norma o marco regulatorio que condiciona el mercado (habilita, restringe, obliga)."
   },
-  "ipc_secciones": {
-    "A": "Necesidades corrientes de la vida (incl. agricultura/acuicultura A01)",
-    "B": "Técnicas industriales diversas; transporte",
-    "C": "Química; metalurgia",
-    "D": "Textiles; papel",
-    "E": "Construcciones fijas",
-    "F": "Mecánica; iluminación; calefacción; armamento",
-    "G": "Física",
-    "H": "Electricidad"
-  },
-  "tipo": ["paper", "patente", "producto", "norma", "revision", "tesis", "dataset", "preprint"],
-  "acceso": ["verificado", "parcial", "no_verificado"],
-  "relaciones": ["cita_a", "misma_tecnologia", "relacionada_con", "contradice", "complementa"]
+  "relaciones": {
+    "mismo_mercado": "abordan el mismo mercado o segmento",
+    "competidor_de": "una es competidor/sustituto de la otra",
+    "fuente_de": "una es la fuente primaria que la otra cita",
+    "contradice": "cifras o conclusiones opuestas",
+    "complementa": "se complementan (p.ej. tamaño de mercado + benchmark de márgenes del mismo sector)"
+  }
 }
