@@ -90,8 +90,8 @@ def _fuente_presente(datos: dict, fuente: str | None) -> bool:
     """¿El bloque del expediente que genera un documento del sistema ya existe?"""
     if not fuente:
         return False
-    if fuente == "eval_p2/eval_p4":
-        return bool(datos.get("eval_p2") or datos.get("eval_p4"))
+    if "/" in fuente and "." not in fuente:
+        return any(datos.get(b) for b in fuente.split("/"))
     if "." in fuente:
         bloque, campo = fuente.split(".", 1)
         return bool((datos.get(bloque) or {}).get(campo))

@@ -1,80 +1,52 @@
 {
-  "_descripcion": "Manifiesto del PAQUETE DE POSTULACIÓN por fondo: qué carpetas y documentos hay que reunir para postular, quién los provee y de dónde salen los que genera el sistema. Lo consume tools/postulacion.py para crear el árbol de carpetas y el CHECKLIST de gestión al entrar a formulación.",
-  "_fuente": "Ley I+D: convención GT (Paula Cornejo). CORFO: adjuntos del corpus (PTEC, Baterías, Crea y Valida). Ítems no confirmados con GT llevan confirmar:true.",
+  "_descripcion": "Manifiesto del PAQUETE DE ENTREGABLES DEL MODELO DE NEGOCIO por fondo: solo las carpetas y documentos que el piloto produce para las secciones de modelo de negocio / mercado / escalamiento, mas los insumos que el cliente y el consultor deben aportar para construirlos. NO es el paquete administrativo completo de la postulacion (antecedentes legales, declaraciones juradas, CVs, arancel): eso lo arma el equipo GT / F19. Lo consume tools/postulacion.py para crear el arbol de carpetas y el CHECKLIST al entrar a Fase 2.",
+  "_fuente": "Alcance definido con Paula Cornejo: el piloto se enmarca dentro de un proyecto de innovacion; el modelo se construye desde la informacion del proyecto y suele apoyarse en supuestos (proyectos de innovacion).",
   "_leyenda": {
-    "responsable": "cliente = lo aporta la empresa | brinca = lo arma el consultor | sistema = lo genera el flujo agéntico",
+    "responsable": "cliente = lo aporta la empresa | consultor = lo arma el consultor | sistema = lo genera el flujo agentico",
     "fuente": "para responsable=sistema: bloque/campo del expediente.json de donde sale el documento",
-    "opcional": "true = solo si aplica al caso (no bloquea el envío)",
-    "confirmar": "true = documento inferido, pendiente de validar con el equipo GT contra las bases del fondo"
+    "opcional": "true = solo si aplica al caso (no bloquea la entrega)",
+    "confirmar": "true = documento inferido, pendiente de validar contra las bases del fondo"
   },
   "_comunes": {
     "corfo": [
-      { "carpeta": "Perfil de Proyecto (Fase 1)", "responsable": "sistema", "docs": [
-        { "doc": "Perfil de Proyecto (Fase 1, obligatoria y previa)", "responsable": "sistema", "fuente": "perfil_corfo" } ] },
-      { "carpeta": "Formulario de Postulacion", "responsable": "sistema", "docs": [
-        { "doc": "Formulario de postulación del fondo", "responsable": "sistema", "fuente": "formulario_oficial" } ] },
-      { "carpeta": "Presupuesto y Carta Gantt", "responsable": "sistema", "docs": [
-        { "doc": "Planilla de presupuesto + carta Gantt", "responsable": "sistema", "fuente": "form_w3.plan_de_trabajo" } ] },
-      { "carpeta": "Estado del Arte", "responsable": "sistema", "docs": [
-        { "doc": "Informe de estado del arte (soporte técnico)", "responsable": "sistema", "fuente": "eval_p2/eval_p4" } ] },
-      { "carpeta": "Antecedentes Legales Empresa", "responsable": "cliente", "docs": [
-        { "doc": "Constitución/personalidad jurídica vigente", "responsable": "cliente", "confirmar": true },
-        { "doc": "Instrumento de representación legal (poder vigente)", "responsable": "cliente" } ] },
-      { "carpeta": "Informacion de Participantes", "responsable": "cliente", "docs": [
-        { "doc": "Ficha de la empresa beneficiaria y coejecutores", "responsable": "cliente", "confirmar": true } ] },
-      { "carpeta": "CVs Equipo", "responsable": "cliente", "docs": [
-        { "doc": "CV de director, subdirector e integrantes clave", "responsable": "cliente" } ] },
-      { "carpeta": "Declaraciones Juradas", "responsable": "cliente", "docs": [
-        { "doc": "Declaraciones juradas exigidas por las bases", "responsable": "cliente", "confirmar": true } ] },
-      { "carpeta": "Cartas de Compromiso y Aporte", "responsable": "cliente", "docs": [
-        { "doc": "Cartas de compromiso / aporte pecuniario y no pecuniario", "responsable": "cliente", "confirmar": true } ] },
-      { "carpeta": "Subcontratos", "responsable": "cliente", "docs": [
-        { "doc": "Cotizaciones/contratos de subcontratos y servicios de terceros", "responsable": "cliente", "opcional": true } ] },
-      { "carpeta": "Reuniones", "responsable": "brinca", "docs": [
-        { "doc": "Notas/transcripciones de reuniones con el cliente", "responsable": "brinca" } ] }
+      { "carpeta": "Insumos del Proyecto de Innovacion", "responsable": "cliente", "docs": [
+        { "doc": "Descripcion del proyecto: que se desarrolla, propuesta tecnica, TRL / estado de desarrollo, resultado esperado", "responsable": "cliente" },
+        { "doc": "Datos comerciales del cliente: precios actuales, costos, clientes actuales, estados financieros (si existen)", "responsable": "cliente" } ] },
+      { "carpeta": "Reuniones", "responsable": "consultor", "docs": [
+        { "doc": "Notas / transcripciones de las reuniones con el cliente", "responsable": "consultor" } ] },
+      { "carpeta": "Investigacion de Mercado", "responsable": "sistema", "docs": [
+        { "doc": "Informe de mercado: TAM/SAM/SOM, competidores y sustitutos, precios de referencia, benchmarks, con fuentes verificadas", "responsable": "sistema", "fuente": "investigacion_mercado" } ] },
+      { "carpeta": "Modelo de Negocio", "responsable": "sistema", "docs": [
+        { "doc": "Business Model Canvas + unit economics + proyeccion por escenarios", "responsable": "sistema", "fuente": "modelo_negocio" } ] },
+      { "carpeta": "Proyeccion Financiera", "responsable": "sistema", "docs": [
+        { "doc": "Planilla de proyeccion (ingresos / costos / resultado por anio y escenario)", "responsable": "sistema", "fuente": "plan_escalamiento.proyeccion_estructurada" } ] },
+      { "carpeta": "Plan de Escalamiento", "responsable": "sistema", "docs": [
+        { "doc": "Hitos comerciales, metas de traccion y estrategia de escalamiento", "responsable": "sistema", "fuente": "plan_escalamiento" } ] },
+      { "carpeta": "Secciones de Formulario (Modelo de Negocio)", "responsable": "sistema", "docs": [
+        { "doc": "Respuestas redactadas a las secciones en_alcance_piloto del formulario del fondo", "responsable": "sistema", "fuente": "formulario_oficial" } ] },
+      { "carpeta": "Impacto y Continuidad", "responsable": "sistema", "docs": [
+        { "doc": "Impacto esperado + estrategia de continuidad post-subsidio", "responsable": "sistema", "fuente": "impacto_continuidad" } ] },
+      { "carpeta": "Supuestos a Confirmar", "responsable": "sistema", "docs": [
+        { "doc": "Registro de supuestos del modelo pendientes de confirmar por el cliente antes de presentar", "responsable": "sistema", "fuente": "impacto_continuidad.supuestos_a_confirmar" } ] }
     ]
   },
   "fondos": {
-    "ley_id": {
-      "nombre": "Ley I+D (certificación / crédito tributario)",
-      "paradigma": "certificacion_id",
-      "carpetas": [
-        { "carpeta": "Formulario Tecnico", "responsable": "sistema", "docs": [
-          { "doc": "Formulario Técnico Ley I+D", "responsable": "sistema", "fuente": "formulario_oficial" } ] },
-        { "carpeta": "Estado del Arte", "responsable": "sistema", "docs": [
-          { "doc": "Informe de estado del arte (soporte del formulario técnico)", "responsable": "sistema", "fuente": "eval_p2/eval_p4" } ] },
-        { "carpeta": "Plan de Trabajo y Presupuesto", "responsable": "sistema", "docs": [
-          { "doc": "Plan de trabajo + carta Gantt + presupuesto", "responsable": "sistema", "fuente": "form_w3.plan_de_trabajo" } ] },
-        { "carpeta": "Arancel de Postulacion", "responsable": "brinca", "docs": [
-          { "doc": "Cálculo del arancel (escala por tramos, tope 30 UTM)", "responsable": "sistema", "fuente": "form_w4" },
-          { "doc": "Comprobante de pago del arancel", "responsable": "cliente" } ] },
-        { "carpeta": "Personal que Acredita Capacidades", "responsable": "cliente", "docs": [
-          { "doc": "CV + título del profesional que acredita capacidades (contrato vigente + I+D 36m)", "responsable": "cliente", "fuente": "form_w3.profesional_acreditador" } ] },
-        { "carpeta": "CVs Equipo", "responsable": "cliente", "docs": [
-          { "doc": "CV formato CORFO de cada integrante del equipo", "responsable": "cliente" } ] },
-        { "carpeta": "Instrumento de Representacion", "responsable": "cliente", "docs": [
-          { "doc": "Poder / instrumento de representación legal vigente", "responsable": "cliente" } ] },
-        { "carpeta": "Pantallazo Sistema Contable", "responsable": "cliente", "docs": [
-          { "doc": "Captura del sistema contable (acredita contabilidad completa)", "responsable": "cliente" } ] },
-        { "carpeta": "Subcontratos", "responsable": "cliente", "docs": [
-          { "doc": "Contratos/cotizaciones de subcontratos (si aplica)", "responsable": "cliente", "opcional": true } ] },
-        { "carpeta": "Reuniones", "responsable": "brinca", "docs": [
-          { "doc": "Notas/transcripciones de reuniones con el cliente", "responsable": "brinca" } ] }
-      ]
-    },
     "crea_valida": {
       "nombre": "CORFO Crea y Valida",
       "paradigma": "subsidio_concursable",
       "hereda": "corfo",
-      "carpetas": []
+      "carpetas": [
+        { "carpeta": "Perfil de Proyecto (Fase 1)", "responsable": "sistema", "docs": [
+          { "doc": "Secciones de modelo de negocio / mercado del Perfil de Proyecto (Fase 1, previa y obligatoria)", "responsable": "sistema", "fuente": "perfil_corfo" } ] }
+      ]
     },
     "innova_alta_tecnologia": {
       "nombre": "CORFO Innova Alta Tecnología",
       "paradigma": "subsidio_concursable",
       "hereda": "corfo",
       "carpetas": [
-        { "carpeta": "Acreditacion Gasto I+D", "responsable": "cliente", "docs": [
-          { "doc": "Respaldo del gasto I+D ≥30% (requisito del fondo)", "responsable": "cliente", "confirmar": true } ] }
+        { "carpeta": "Perfil de Proyecto (Fase 1)", "responsable": "sistema", "docs": [
+          { "doc": "Secciones de modelo de negocio / mercado del Perfil + Presentación (Fase 1, obligatoria)", "responsable": "sistema", "fuente": "perfil_corfo" } ] }
       ]
     },
     "consolida_expande": {
@@ -82,8 +54,8 @@
       "paradigma": "subsidio_concursable",
       "hereda": "corfo",
       "carpetas": [
-        { "carpeta": "Evidencia I+D Previa", "responsable": "cliente", "docs": [
-          { "doc": "Evidencia del desarrollo I+D previo que se escala (franja alta de TRL)", "responsable": "cliente", "confirmar": true } ] }
+        { "carpeta": "Plan de Negocios (Etapa 2)", "responsable": "sistema", "docs": [
+          { "doc": "Estrategia de negocio + escalabilidad (Etapa 2 del formulario; peso alto en este fondo)", "responsable": "sistema", "fuente": "formulario_oficial" } ] }
       ]
     },
     "capital_humano": {
@@ -91,9 +63,8 @@
       "paradigma": "subsidio_concursable",
       "hereda": "corfo",
       "carpetas": [
-        { "carpeta": "Perfil del Experto", "responsable": "cliente", "docs": [
-          { "doc": "CV y perfil del profesional/técnico experto a insertar (jornada completa, ≥12 meses)", "responsable": "cliente" },
-          { "doc": "Carta de compromiso de contratación", "responsable": "cliente", "confirmar": true } ] }
+        { "carpeta": "Encuadre de Mercado del Desafio", "responsable": "sistema", "docs": [
+          { "doc": "Caracterización del desafío en clave de mercado + resultados/indicadores de negocio (aporte acotado del piloto en este fondo)", "responsable": "sistema", "fuente": "formulario_oficial" } ] }
       ]
     }
   }

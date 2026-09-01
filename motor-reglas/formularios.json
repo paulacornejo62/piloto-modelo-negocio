@@ -1,72 +1,70 @@
 {
-  "_descripcion": "Spec de los formularios oficiales por fondo (fund-aware). FORM redacta cada 'seccion' desde el insumo del Deep Research + el expediente, y escribe las respuestas en expediente.formulario_oficial. Ley I+D = 6 preguntas de certificacion (guia del equipo GT); CORFO = secciones estructuradas por sus criterios de evaluacion (ponderador). Para agregar/ajustar un fondo, edita este archivo. Guia de redaccion fina por CORFO = pendiente del equipo GT.",
-  "_fuente": "preguntas_formulario_i+d.md (Ley I+D) + desarrollo/contexto/resumenes/subsidios/*.md (criterios de evaluacion CORFO). Ver desarrollo/diseno/auditoria-formularios-por-fondo.md.",
+  "_descripcion": "Spec de las secciones del formulario oficial de cada fondo CORFO (fund-aware). mn-form-w2 redacta las secciones marcadas en_alcance_piloto=true (modelo de negocio / mercado / escalamiento / impacto) desde el insumo verificado del expediente, y las escribe en expediente.formulario_oficial. Las secciones en_alcance_piloto=false (metodologia tecnica, actividades de I+D, equipo/capacidades) quedan para el equipo GT / F19: el piloto solo las lista para tener la estructura completa del formulario. criterio_pct = ponderador del criterio de evaluacion del fondo.",
+  "_fuente": "desarrollo/contexto/resumenes/subsidios/*.md (criterios de evaluacion CORFO). Guia de redaccion fina por seccion = pendiente del equipo GT.",
+  "_leyenda": {
+    "en_alcance_piloto": "true = el piloto de modelo de negocio redacta esta seccion; false = la cubre el equipo GT / F19",
+    "incluir": "que debe contener la respuesta (requisitos de la seccion)",
+    "limite": "tope de caracteres de la seccion (si el fondo lo fija)",
+    "criterio_pct": "peso del criterio de evaluacion asociado"
+  },
   "fondos": {
-    "ley_id": {
-      "nombre": "Ley I+D (Ley 20.241)",
-      "paradigma": "certificacion_id",
-      "secciones": [
-        {"id": "contexto_tecnico", "titulo": "Contexto técnico del proyecto", "incluir": "Problema/desafío/oportunidad + causas (técnicas/científicas/regulatorias) + efectos en la industria + DIMENSIÓN en cifras (%, montos, frecuencias) + fuentes/referencias + por qué es relevante ahora.", "limite": 4000},
-        {"id": "estado_del_arte", "titulo": "Investigación: estado del arte", "incluir": "Mapa del conocimiento actual: literatura académica + patentes + otras fuentes; limitaciones/vacíos de lo existente; similitudes/diferencias con lo propuesto; fundamentar la NOVEDAD; fuentes específicas.", "limite": 5000},
-        {"id": "nuevos_conocimientos", "titulo": "Nuevos conocimientos a generar", "incluir": "El conocimiento nuevo, ORIGINAL y no trivial; en qué forma (teoría/modelo/metodología/mecanismo/relación causa-efecto/validación); por qué no existía antes; ligado al estado del arte; qué validación permitirá concluir que se generó.", "limite": 5000},
-        {"id": "desarrollo_experimental", "titulo": "Desarrollo Experimental", "incluir": "Material/producto/dispositivo/proceso/sistema/servicio a desarrollar; TRL actual→esperado; qué lo hace novedoso/superior; comparación explícita con soluciones actuales; indicadores cuantitativos y cualitativos; etapa de desarrollo abordada.", "limite": 5000},
-        {"id": "atributos_tecnicos", "titulo": "Atributos técnicos (novedad/superioridad)", "incluir": "Atributos diferenciadores CUANTIFICADOS (cifras/rangos); benchmark de la industria NACIONAL con el que se compara; cómo responden a un problema no resuelto; por qué las mejoras son SUSTANCIALES (no triviales).", "limite": 5000},
-        {"id": "incertidumbre", "titulo": "Incertidumbre científico-tecnológica", "incluir": "Qué no se puede predecir técnicamente sin investigar/experimentar; por qué no lo resuelve la ingeniería estándar (Frascati); hipótesis a probar; métodos para resolverlo.", "limite": 5000, "solo_si_tipo": "informatico"}
-      ]
-    },
     "crea_valida": {
       "nombre": "Crea y Valida Innovación (CORFO)",
       "paradigma": "subsidio_concursable",
       "fase_previa": "Fase 1 — Perfil de Proyecto (obligatoria, no vinculante; retroalimentación en 14 días hábiles). Etapas CREA + VALIDA.",
+      "nota_alcance": "El piloto redacta: diagnóstico, mercado objetivo, novedad/diferenciación, impacto y escalabilidad. Quedan para GT: metodología técnica, actividades de I+D (GID) y capacidades del equipo.",
       "secciones": [
-        {"id": "diagnostico", "titulo": "Problema — Diagnóstico", "criterio_pct": 10, "incluir": "Problema/desafío/oportunidad con evidencia."},
-        {"id": "mercado_objetivo", "titulo": "Problema — Mercado objetivo", "criterio_pct": 10, "incluir": "Mercado al que apunta la solución."},
-        {"id": "metodologia", "titulo": "Solución — Metodología", "criterio_pct": 20, "incluir": "Descripción de la solución, plan de trabajo, indicadores, presupuesto, dedicación."},
-        {"id": "novedad", "titulo": "Solución — Grado de novedad y diferenciación", "criterio_pct": 10, "incluir": "Qué la hace novedosa vs lo existente."},
-        {"id": "actividades_id", "titulo": "Solución — Actividades de I+D (GID)", "criterio_pct": 10, "incluir": "% del costo total en I+D (GID ≥30% → nota 5). Definiciones I+D Ley 20.241."},
-        {"id": "impacto", "titulo": "Introducción al mercado — Impacto", "criterio_pct": 10, "incluir": "Impacto esperado."},
-        {"id": "escalabilidad", "titulo": "Introducción al mercado — Escalabilidad", "criterio_pct": 10, "incluir": "Potencial de escalamiento."},
-        {"id": "capacidades", "titulo": "Capacidades (beneficiario/asociados/colaboradoras)", "criterio_pct": 20, "incluir": "Equipo y capacidades para ejecutar."}
+        {"id": "diagnostico", "titulo": "Problema — Diagnóstico", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Problema/desafío/oportunidad del proyecto de innovación, dimensionado con cifras verificadas (de investigacion_mercado): magnitud, a quién afecta, por qué es relevante ahora. Diferenciar hecho verificado de supuesto."},
+        {"id": "mercado_objetivo", "titulo": "Problema — Mercado objetivo", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Segmento(s) objetivo, tamaño (TAM/SAM/SOM de investigacion_mercado con su método y fuentes), geografía, y por qué es alcanzable para el cliente. Marcar los supuestos."},
+        {"id": "metodologia", "titulo": "Solución — Metodología", "criterio_pct": 20, "en_alcance_piloto": false, "incluir": "Descripción de la solución técnica, plan de trabajo, indicadores, presupuesto, dedicación. (Equipo GT / F19.)"},
+        {"id": "novedad", "titulo": "Solución — Grado de novedad y diferenciación", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Diferenciación frente a competidores y sustitutos identificados (investigacion_mercado.competidores): qué hace distinta la propuesta de valor y por qué el cliente actual no lo resuelve así hoy. La novedad técnica la complementa GT."},
+        {"id": "actividades_id", "titulo": "Solución — Actividades de I+D (GID)", "criterio_pct": 10, "en_alcance_piloto": false, "incluir": "% del costo total en I+D (GID ≥30% → nota 5). Definiciones I+D Ley 20.241. (Equipo GT / F19.)"},
+        {"id": "impacto", "titulo": "Introducción al mercado — Impacto", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Impacto esperado con cifras del modelo (impacto_continuidad.impacto_esperado): ingresos incrementales, ahorro, empleo, impacto social/ambiental."},
+        {"id": "escalabilidad", "titulo": "Introducción al mercado — Escalabilidad", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Potencial de escalamiento (plan_escalamiento.estrategia_escalamiento): nuevos segmentos/geografías/canales, anclado al SAM/SOM y a la proyección por escenarios."},
+        {"id": "capacidades", "titulo": "Capacidades (beneficiario/asociados/colaboradoras)", "criterio_pct": 20, "en_alcance_piloto": false, "incluir": "Equipo y capacidades para ejecutar. (Fuera del piloto — equipo GT / F19.)"}
       ]
     },
     "innova_alta_tecnologia": {
       "nombre": "Innova Alta Tecnología (CORFO)",
       "paradigma": "subsidio_concursable",
       "fase_previa": "Fase 1 — Perfil + Presentación (obligatoria). Requiere TRL>3 y gasto I+D ≥30%.",
+      "nota_alcance": "El piloto redacta: diagnóstico de mercado, mercado objetivo, novedad, beneficios esperados y estrategia de continuidad. Quedan para GT: inteligencia tecnológica y PI, metodología técnica, equipo y capacidades del beneficiario.",
       "secciones": [
-        {"id": "diagnostico_tecnologico", "titulo": "Problema — Diagnóstico y análisis tecnológico", "criterio_pct": 15, "incluir": "Diagnóstico + inteligencia tecnológica + propiedad intelectual."},
-        {"id": "mercado_objetivo", "titulo": "Problema — Mercado objetivo", "criterio_pct": 10, "incluir": "Mercado objetivo."},
-        {"id": "metodologia", "titulo": "Solución — Metodología", "criterio_pct": 15, "incluir": "Solución, plan de trabajo, indicadores, presupuesto, dedicación horaria."},
-        {"id": "novedad", "titulo": "Solución — Novedad y diferenciación", "criterio_pct": 15, "incluir": "Grado de novedad y diferenciación."},
-        {"id": "beneficios", "titulo": "Mercado — Beneficios esperados", "criterio_pct": 10, "incluir": "Ingresos/ahorro, impactos sociales/ambientales."},
-        {"id": "continuidad", "titulo": "Mercado — Estrategia de continuidad", "criterio_pct": 15, "incluir": "Riesgos/barreras, protección de resultados, captura de valor, continuidad post-subsidio."},
-        {"id": "equipo", "titulo": "Capacidades — Equipo de trabajo", "criterio_pct": 10, "incluir": "Equipo del proyecto."},
-        {"id": "beneficiario", "titulo": "Capacidades — Beneficiario y asociados", "criterio_pct": 10, "incluir": "Capacidades del beneficiario y asociados."}
+        {"id": "diagnostico_tecnologico", "titulo": "Problema — Diagnóstico y análisis tecnológico", "criterio_pct": 15, "en_alcance_piloto": true, "incluir": "Diagnóstico del problema/oportunidad de mercado, dimensionado con cifras verificadas. La inteligencia tecnológica y el análisis de propiedad intelectual los complementa GT."},
+        {"id": "mercado_objetivo", "titulo": "Problema — Mercado objetivo", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Segmento(s), tamaño (TAM/SAM/SOM con método y fuentes), geografía, por qué es alcanzable. Marcar supuestos."},
+        {"id": "metodologia", "titulo": "Solución — Metodología", "criterio_pct": 15, "en_alcance_piloto": false, "incluir": "Solución técnica, plan de trabajo, indicadores, presupuesto, dedicación horaria. (Equipo GT / F19.)"},
+        {"id": "novedad", "titulo": "Solución — Novedad y diferenciación", "criterio_pct": 15, "en_alcance_piloto": true, "incluir": "Grado de diferenciación de mercado vs. competidores y sustitutos. La novedad técnica la complementa GT."},
+        {"id": "beneficios", "titulo": "Mercado — Beneficios esperados", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Ingresos/ahorro y impactos sociales/ambientales, con cifras del modelo (impacto_continuidad)."},
+        {"id": "continuidad", "titulo": "Mercado — Estrategia de continuidad", "criterio_pct": 15, "en_alcance_piloto": true, "incluir": "Riesgos/barreras y su mitigación, captura de valor, y cómo se sostiene el negocio post-subsidio (impacto_continuidad.estrategia_continuidad). La protección de resultados (PI) la complementa GT."},
+        {"id": "equipo", "titulo": "Capacidades — Equipo de trabajo", "criterio_pct": 10, "en_alcance_piloto": false, "incluir": "Equipo del proyecto. (Fuera del piloto.)"},
+        {"id": "beneficiario", "titulo": "Capacidades — Beneficiario y asociados", "criterio_pct": 10, "en_alcance_piloto": false, "incluir": "Capacidades del beneficiario y asociados. (Fuera del piloto.)"}
       ]
     },
     "consolida_expande": {
       "nombre": "Consolida y Expande Innovación (CORFO)",
       "paradigma": "subsidio_concursable",
       "fase_previa": "Escalamiento de algo que YA requirió I+D (franja alta de TRL). Evaluación en 2 etapas.",
+      "nota_alcance": "Fondo con foco de negocio fuerte. El piloto redacta: diagnóstico, mercado objetivo, novedad, estrategia de negocio y escalabilidad. Quedan para GT: metodología del escalamiento técnico y capacidades.",
       "secciones": [
-        {"id": "diagnostico", "titulo": "Etapa 1 · Problema — Diagnóstico", "criterio_pct": 10, "incluir": "Problema/oportunidad de escalamiento."},
-        {"id": "mercado_objetivo", "titulo": "Etapa 1 · Problema — Mercado objetivo", "criterio_pct": 20, "incluir": "Mercado(s) de destino del escalamiento."},
-        {"id": "metodologia", "titulo": "Etapa 1 · Solución — Metodología", "criterio_pct": 30, "incluir": "Metodología del escalamiento/validación."},
-        {"id": "novedad", "titulo": "Etapa 1 · Solución — Novedad y diferenciación", "criterio_pct": 40, "incluir": "Novedad/diferenciación del producto/proceso."},
-        {"id": "estrategia_negocio", "titulo": "Etapa 2 · Plan de Negocios — Estrategia de negocio", "criterio_pct": 40, "incluir": "Estrategia comercial/de negocio."},
-        {"id": "escalabilidad", "titulo": "Etapa 2 · Plan de Negocios — Escalabilidad", "criterio_pct": 30, "incluir": "Escalabilidad nacional/internacional."},
-        {"id": "capacidades", "titulo": "Etapa 2 · Capacidades — Beneficiario y asociados", "criterio_pct": 30, "incluir": "Capacidades para escalar."}
+        {"id": "diagnostico", "titulo": "Etapa 1 · Problema — Diagnóstico", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Problema/oportunidad de escalamiento del negocio, con evidencia verificada."},
+        {"id": "mercado_objetivo", "titulo": "Etapa 1 · Problema — Mercado objetivo", "criterio_pct": 20, "en_alcance_piloto": true, "incluir": "Mercado(s) de destino del escalamiento: tamaño (TAM/SAM/SOM), geografías, por qué son alcanzables. Marcar supuestos."},
+        {"id": "metodologia", "titulo": "Etapa 1 · Solución — Metodología", "criterio_pct": 30, "en_alcance_piloto": false, "incluir": "Metodología del escalamiento/validación técnica. (Equipo GT / F19.)"},
+        {"id": "novedad", "titulo": "Etapa 1 · Solución — Novedad y diferenciación", "criterio_pct": 40, "en_alcance_piloto": true, "incluir": "Novedad/diferenciación del producto/proceso frente a la oferta actual del mercado."},
+        {"id": "estrategia_negocio", "titulo": "Etapa 2 · Plan de Negocios — Estrategia de negocio", "criterio_pct": 40, "en_alcance_piloto": true, "incluir": "Estrategia comercial: modelo de negocio (canvas), unit economics, pricing, canales, proyección financiera por escenarios (modelo_negocio + plan_escalamiento)."},
+        {"id": "escalabilidad", "titulo": "Etapa 2 · Plan de Negocios — Escalabilidad", "criterio_pct": 30, "en_alcance_piloto": true, "incluir": "Escalabilidad nacional/internacional: hitos comerciales, metas de tracción, cómo crece la penetración de SOM en el horizonte."},
+        {"id": "capacidades", "titulo": "Etapa 2 · Capacidades — Beneficiario y asociados", "criterio_pct": 30, "en_alcance_piloto": false, "incluir": "Capacidades para escalar. (Fuera del piloto.)"}
       ]
     },
     "capital_humano": {
       "nombre": "Capital Humano para Innovación (CORFO)",
       "paradigma": "subsidio_concursable",
       "fase_previa": "Inserción de UN profesional/técnico experto (jornada completa, ≥12 meses). Foco en la persona.",
+      "nota_alcance": "Fondo centrado en la persona a insertar; el aporte del piloto es acotado. Redacta el encuadre de mercado del desafío y los resultados/indicadores de negocio. El perfil de la persona, la metodología y el plan de trabajo son de GT.",
       "secciones": [
-        {"id": "caracterizacion_desafio", "titulo": "Caracterización e identificación del desafío en la empresa", "criterio_pct": 35, "incluir": "El desafío productivo/competitivo que la persona abordará."},
-        {"id": "perfil_participantes", "titulo": "Perfil de los participantes (beneficiario + profesional a contratar)", "criterio_pct": 35, "incluir": "Beneficiario (10%) + perfil del profesional/técnico experto a contratar (25%): título/grado, experiencia, encaje con el desafío."},
-        {"id": "metodologia_plan", "titulo": "Metodología y Plan de Trabajo", "criterio_pct": 20, "incluir": "Metodología (10%) + plan de trabajo (10%)."},
-        {"id": "resultados_indicadores", "titulo": "Resultados e indicadores comprometidos", "criterio_pct": 10, "incluir": "Resultados (5%) + indicadores (5%)."}
+        {"id": "caracterizacion_desafio", "titulo": "Caracterización e identificación del desafío en la empresa", "criterio_pct": 35, "en_alcance_piloto": true, "incluir": "El desafío productivo/competitivo que la persona abordará, encuadrado con el problema de mercado y la oportunidad de negocio (perfil_comercial + investigacion_mercado)."},
+        {"id": "perfil_participantes", "titulo": "Perfil de los participantes (beneficiario + profesional a contratar)", "criterio_pct": 35, "en_alcance_piloto": false, "incluir": "Beneficiario (10%) + perfil del profesional/técnico experto a contratar (25%). (Equipo GT / F19.)"},
+        {"id": "metodologia_plan", "titulo": "Metodología y Plan de Trabajo", "criterio_pct": 20, "en_alcance_piloto": false, "incluir": "Metodología (10%) + plan de trabajo (10%). (Equipo GT / F19.)"},
+        {"id": "resultados_indicadores", "titulo": "Resultados e indicadores comprometidos", "criterio_pct": 10, "en_alcance_piloto": true, "incluir": "Resultados (5%) + indicadores (5%) de negocio esperados de la inserción, con cifras del modelo (impacto_continuidad + plan_escalamiento.metas_traccion)."}
       ]
     }
   }
