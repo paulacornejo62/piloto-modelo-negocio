@@ -1,15 +1,25 @@
 #!/usr/bin/env python3
-"""Motor de reglas determinista del sistema GTF.
+"""Motor de reglas determinista del piloto de modelo de negocio.
 
-Parte NO generativa: cálculos exactos y repetibles que no deben quedar a criterio
-del LLM. Cubre la clasificación Frascati, la elegibilidad Ley I+D, la selección de
-instrumentos CORFO y la compuerta GO/PIVOT/NO-GO.
+Parte NO generativa: calculos exactos y repetibles que no deben quedar a criterio
+del LLM (un modelo podria alucinar un umbral). Cubre:
 
-Datos en `instrumentos.json` (mismo directorio). Sin dependencias externas.
+  - dimensionamiento de mercado (coherencia TAM / SAM / SOM),
+  - unit economics (margen de contribucion, LTV, LTV/CAC, payback, punto de equilibrio),
+  - proyeccion financiera anual por escenario,
+  - encaje de la proyeccion con el mercado obtenible,
+  - la compuerta de viabilidad SOLIDO / AJUSTAR / INVIABLE / DEVOLVER,
+  - QA de coherencia de la Fase 2 (FORM_W5) y de las cifras que declara el cliente.
+
+Umbrales y parametros en `parametros.json` (mismo directorio). Sin dependencias
+externas.
+
+>>> PRIMERA VERSION. Los umbrales (margen minimo, LTV/CAC, payback, penetracion de
+    SOM) estan POR VALIDAR con ingenieria comercial. Se editan en parametros.json.
 
 Uso como CLI:
     python3 motor-reglas/reglas.py --test     # autotest (asserts)
-    python3 motor-reglas/reglas.py --demo      # demo con un caso
+    python3 motor-reglas/reglas.py --demo     # demo con un caso
 """
 from __future__ import annotations
 
@@ -17,256 +27,321 @@ import json
 import sys
 from pathlib import Path
 
-DATA = json.loads((Path(__file__).resolve().parent / "instrumentos.json").read_text(encoding="utf-8"))
+PARAMS = json.loads((Path(__file__).resolve().parent / "parametros.json").read_text(encoding="utf-8"))
+UMBRALES = PARAMS["umbrales"]
 
 
-# ---------- Frascati (EVAL_P4-II) ----------
-# Exclusiones de la Ley I+D (Frascati): categorías que NO son I+D. Por defecto (C1),
-# antes de afirmar es_id el caso se contrasta contra ellas; cada componente I/D
-# afirmado debe nombrar qué exclusión sortea, con sustento del estado del arte.
-EXCLUSIONES_LEY_ID = [
-    "adaptacion_rutinaria",          # ajustar/parametrizar algo existente sin incógnita
-    "ingenieria_estandar",           # resoluble por un profesional calificado sin experimentar
-    "adquisicion_puesta_en_marcha",  # comprar e instalar tecnología existente
-    "validacion_medicion_comercial", # ensayos/mediciones de rutina, control de calidad
-    "novedad_solo_local",            # nuevo para la empresa/país, no para el estado del arte
-]
+# ---------- helpers ----------
+def _num(x):
+    """float(x) si es un numero utilizable; None en cualquier otro caso (incl. bool)."""
+    try:
+        if x is None or isinstance(x, bool):
+            return None
+        return float(x)
+    except (TypeError, ValueError):
+        return None
 
 
-def evaluar_exclusiones(exclusiones: list[dict] | None) -> dict:
-    """Contrasta el caso contra las exclusiones de la Ley I+D (prueba previa a es_id).
+def _pct(x):
+    return None if x is None else round(x, 4)
 
-    Solo 'sorteada' CON sustento deja atrás una exclusión. Todo lo demás la deja
-    abierta — pero no todo lo abierto significa lo mismo, y el motor lo distingue
-    porque de eso depende qué puede hacer el consultor después:
 
-      · 'aplica'    → FLANCO REAL: el caso cae ahí. Se resuelve REENCUADRANDO el
-                      proyecto (ver `reencuadre_elegibilidad`), no indagando más.
-      · 'pendiente' → NO SE INDAGÓ todavía. No es un no: es un dato que falta.
-                      Se resuelve investigando o preguntando al cliente.
-      · faltante    → ni siquiera se listó la exclusión.
-      · sin sustento→ se declaró sorteada sin respaldo del estado del arte.
+# ---------- Mercado: coherencia TAM / SAM / SOM (EVAL_P2 / EVAL_P4) ----------
+def mercado_coherencia(tam_clp=None, sam_clp=None, som_clp=None) -> dict:
+    """Verifica el embudo de mercado: SOM <= SAM <= TAM.
 
-    Un veredicto negativo NUNCA es terminal: `bloqueos` dice qué está abierto y
-    `como_destrabar` qué haría falta para cerrarlo. El equipo consultor decide si
-    invierte en cerrarlo, si reencuadra o si lo deja.
-
-    Args:
-        exclusiones: lista de {exclusion, veredicto, sustento}. veredicto ∈
-            {'sorteada','aplica','pendiente'}.
-
-    Returns:
-        dict con todas_sorteadas (bool), el detalle por categoría y la guía de
-        destrabe.
+    No opina sobre si el mercado es grande o chico: solo chequea que las tres
+    cifras esten en la relacion correcta y marca lo que falta o no cuadra.
     """
-    items = exclusiones or []
-    dadas = {(x.get("exclusion") or "").strip() for x in items}
-    faltantes = [e for e in EXCLUSIONES_LEY_ID if e not in dadas]
-    aplican = [x.get("exclusion") for x in items if x.get("veredicto") == "aplica"]
-    pendientes = [x.get("exclusion") for x in items if x.get("veredicto") == "pendiente"]
-    sin_sustento = [x.get("exclusion") for x in items
-                    if x.get("veredicto") == "sorteada" and not (x.get("sustento") or "").strip()]
-    # Una exclusión queda atrás SOLO si fue sorteada con sustento. 'pendiente' no cierra nada.
-    todas = not faltantes and not aplican and not pendientes and not sin_sustento
-
-    como_destrabar = []
-    if aplican:
-        como_destrabar.append(
-            f"REENCUADRE (no más análisis): el caso cae en {', '.join(aplican)}. Indagar más no lo cambia — "
-            "hay que cambiar el alcance. Ver `reencuadre_elegibilidad`: desarrollar en vez de comprar, socio "
-            "académico, agregar un estudio financiable, o mover lo incierto a una fase posterior.")
-    if pendientes:
-        como_destrabar.append(
-            f"INDAGAR: {', '.join(pendientes)} sin resolver. NO es un rechazo — es información que falta. "
-            "Se cierra con estado del arte o con un dato del cliente.")
-    if faltantes:
-        como_destrabar.append(
-            f"EVALUAR: {', '.join(faltantes)} ni siquiera se contrastó. La prueba de exclusiones es completa o no vale.")
-    if sin_sustento:
-        como_destrabar.append(
-            f"SUSTENTAR: {', '.join(sin_sustento)} se declaró sorteada sin respaldo. Citar el estado del arte.")
-
-    return {"todas_sorteadas": todas,
-            "exclusiones_faltantes": faltantes,
-            "exclusiones_que_aplican": aplican,
-            "exclusiones_pendientes": pendientes,
-            "sorteadas_sin_sustento": sin_sustento,
-            "bloqueos": {"por_flanco_real": aplican, "por_falta_de_indagacion": pendientes,
-                         "por_no_evaluadas": faltantes, "por_falta_de_sustento": sin_sustento},
-            "como_destrabar": como_destrabar}
-
-
-def frascati(componente_i: bool, componente_d: bool,
-             exclusiones: list[dict] | None = None) -> dict:
-    """Clasifica la naturaleza I+D según la matriz 2x2 de Frascati.
-
-    Args:
-        componente_i: cumple "I" (genera nuevo conocimiento / uso no trivial).
-        componente_d: cumple "D" (resultado técnico incierto / experimentación).
-        exclusiones: prueba de exclusiones (C1). Si se pasa, es_id solo es
-            DEFENDIBLE cuando todas las exclusiones fueron sorteadas con sustento;
-            un es_id afirmado que cae en una exclusión es un falso positivo.
-
-    Returns:
-        dict con cuadrante, es_id (bool), elegibilidad y —si hubo exclusiones—
-        el veredicto de la prueba, es_id_defendible y `defendibilidad`.
-
-    `es_id_defendible=False` NO es un veredicto final sobre el proyecto: es el
-    estado del EXPEDIENTE hoy. `defendibilidad.estado` dice de qué tipo es el
-    bloqueo y `defendibilidad.siguiente_paso` qué haría falta, porque el equipo
-    consultor puede querer seguir analizando o buscar un reencuadre antes de
-    descartar el caso:
-      · 'defendible'            → las cinco sorteadas con sustento.
-      · 'incompleto'            → falta indagar/sustentar. Se cierra con trabajo.
-      · 'requiere_reencuadre'   → hay un flanco real; más análisis no lo mueve.
-      · 'sin_id'                → no se afirmó ni I ni D.
-    """
-    es_id = bool(componente_i or componente_d)
-    if componente_i and componente_d:
-        cuadrante, elegibilidad = "I+D", "Alto"
-    elif componente_i:
-        cuadrante, elegibilidad = "Solo I", "Medio-Alto"
-    elif componente_d:
-        cuadrante, elegibilidad = "Solo D", "Medio-Alto"
-    else:
-        cuadrante, elegibilidad = "Sin I-D", "Cero"
-    resultado = {"cuadrante": cuadrante, "es_id": es_id, "elegibilidad_ley_id": elegibilidad}
-    if exclusiones is not None:
-        veredicto = evaluar_exclusiones(exclusiones)
-        resultado["exclusiones"] = veredicto
-        defendible = bool(es_id and veredicto["todas_sorteadas"])
-        resultado["es_id_defendible"] = defendible
-        # Un `False` no cierra el caso: dice qué tipo de bloqueo hay y por dónde seguir.
-        if not es_id:
-            estado, paso = "sin_id", ("No se afirmó componente I ni D. Revisar si el alcance actual esconde "
-                                      "incertidumbre técnica, o si conviene reencuadrar el proyecto.")
-        elif defendible:
-            estado, paso = "defendible", "Las cinco exclusiones sorteadas con sustento. El caso se sostiene."
-        elif veredicto["exclusiones_que_aplican"]:
-            estado, paso = "requiere_reencuadre", ("Hay un flanco real: más análisis no lo mueve. Trabajar "
-                                                   "`reencuadre_elegibilidad` con el consultor antes de descartar.")
-        else:
-            estado, paso = "incompleto", ("El expediente está incompleto, no rechazado. Se cierra indagando, "
-                                          "sustentando o pidiendo el dato al cliente.")
-        resultado["defendibilidad"] = {"estado": estado, "siguiente_paso": paso,
-                                       "como_destrabar": veredicto["como_destrabar"]}
-    return resultado
-
-
-# ---------- Elegibilidad Ley I+D ----------
-def ley_id_elegible(contabilidad: str, trl: int | None, presupuesto_clp: float | None = None) -> dict:
-    """Evalúa requisitos duros de la empresa/proyecto para la Ley I+D."""
-    cfg = DATA["ley_id"]
-    motivos = []
-    if (contabilidad or "").strip().lower() != cfg["contabilidad_requerida"]:
-        motivos.append(f"Requiere contabilidad {cfg['contabilidad_requerida']} (declarada: {contabilidad or '—'}).")
-    if trl is not None and trl > cfg["trl_maximo"]:
-        motivos.append(f"TRL {trl} > máximo {cfg['trl_maximo']}: Ley I+D no cubre validación comercial (TRL 8-9).")
-    if presupuesto_clp is not None and presupuesto_clp < cfg["presupuesto_minimo_clp"]:
-        motivos.append(f"Presupuesto ${presupuesto_clp:,.0f} < mínimo GT ${cfg['presupuesto_minimo_clp']:,.0f} (práctica de elegibilidad GT).")
-    return {"elegible": not motivos, "motivos": motivos,
-            "credito_pct": cfg["credito_tributario_pct"], "tope_anual_utm": cfg["tope_anual_utm"],
-            "regla_facturacion": cfg["regla_facturacion"]}
-
-
-# ---------- Instrumentos CORFO ----------
-def cofinanciamiento(instrumento: dict, tamano: str, lidera_mujer: bool = False) -> float:
-    """% de cofinanciamiento CORFO para un instrumento según tamaño de empresa."""
-    base = instrumento["cofinanciamiento"].get(tamano)
-    if base is None:
-        raise ValueError(f"Tamaño de empresa inválido: {tamano}")
-    return round(min(base + (instrumento["bono_mujer_pct"] if lidera_mujer else 0.0), 1.0), 3)
-
-
-def instrumentos_elegibles(trl: int | None, tamano: str, antiguedad_meses: int,
-                           lidera_mujer: bool = False) -> list[dict]:
-    """Cruza el proyecto con cada instrumento y devuelve su elegibilidad + parámetros."""
-    salida = []
-    for ins in DATA["instrumentos"]:
-        motivos = []
-        if ins["trl_min"] is not None and (trl is None or trl < ins["trl_min"]):
-            motivos.append(f"TRL {trl} < {ins['trl_min']} requerido")
-        if antiguedad_meses < ins["antiguedad_meses_min"]:
-            motivos.append(f"Antigüedad {antiguedad_meses}m < {ins['antiguedad_meses_min']}m requeridos")
-        tope_key = "tope_subsidio_mujer_clp" if lidera_mujer else "tope_subsidio_clp"
-        salida.append({
-            "id": ins["id"], "nombre": ins["nombre"], "elegible": not motivos,
-            "motivos": motivos,
-            "cofinanciamiento_pct": cofinanciamiento(ins, tamano, lidera_mujer),
-            "tope_subsidio_clp": ins.get(tope_key, ins["tope_subsidio_clp"]),
-            "plazo_meses_max": ins["plazo_meses_max"],
-        })
-    return salida
-
-
-# ---------- Arancel de postulación (FORM_W4/W5) ----------
-def arancel(utm_proyecto: float) -> dict:
-    """Arancel de postulación Ley I+D según la escala por tramos (tope 30 UTM).
-
-    Args:
-        utm_proyecto: tamaño del proyecto en UTM (= costo_total_clp / valor_utm_clp).
-
-    Returns:
-        dict con arancel_utm, arancel_clp, el tramo aplicado y el valor UTM usado.
-    """
-    cfg = DATA["ley_id"]["arancel"]
-    tramo = cfg["tramos"][-1]
-    for t in cfg["tramos"]:
-        if t["hasta_utm"] is None or utm_proyecto <= t["hasta_utm"]:
-            tramo = t
-            break
-    bruto = tramo["base_utm"] + max(0.0, utm_proyecto - tramo["excedente_sobre_utm"]) * tramo["tasa"]
-    arancel_utm = round(min(bruto, cfg["tope_utm"]), 2)
+    tam, sam, som = _num(tam_clp), _num(sam_clp), _num(som_clp)
+    alertas = []
+    faltan = [n for n, v in (("TAM", tam), ("SAM", sam), ("SOM", som)) if v is None]
+    if sam is not None and tam is not None and sam > tam:
+        alertas.append(f"SAM ({sam:,.0f}) > TAM ({tam:,.0f}): el mercado servible no puede exceder el total.")
+    if som is not None and sam is not None and som > sam:
+        alertas.append(f"SOM ({som:,.0f}) > SAM ({sam:,.0f}): el mercado obtenible no puede exceder el servible.")
+    if som is not None and tam is not None and sam is None and som > tam:
+        alertas.append(f"SOM ({som:,.0f}) > TAM ({tam:,.0f}).")
     return {
-        "arancel_utm": arancel_utm,
-        "arancel_clp": round(arancel_utm * cfg["valor_utm_clp"]),
-        "utm_proyecto": round(utm_proyecto, 2),
-        "valor_utm_clp": cfg["valor_utm_clp"],
-        "tramo_utm": f"{tramo['desde_utm']}–{tramo['hasta_utm'] or '∞'}",
+        "ok": not alertas and not faltan,
+        "faltan": faltan,
+        "alertas": alertas,
+        "tam_clp": tam, "sam_clp": sam, "som_clp": som,
     }
 
 
-# ---------- Compuerta (EVAL_P5) ----------
-def compuerta(es_id: bool, voto_comite: str, info_suficiente: bool = True) -> str:
-    """Decisión de flujo tras el Comité. Determinista; no la decide el LLM.
+# ---------- Unit economics (EVAL_P4) ----------
+def unit_economics(precio_unitario=None, costo_variable_unitario=None,
+                   costos_fijos_mensuales=None, cac_clp=None,
+                   vida_cliente_meses=None) -> dict:
+    """Indicadores unitarios del modelo, calculados desde sus ENTRADAS.
 
-    Args:
-        es_id: naturaleza I+D del caso.
-        voto_comite: voto del comité.
-        info_suficiente: si es False, el comité no pudo resolver por entendimiento
-            incompleto (típicamente del modelo de negocio, no del estado del arte).
+    Entradas en CLP salvo vida_cliente_meses (meses). 'Unidad' es lo que el modelo
+    defina (un cliente/mes, una transaccion, un equipo vendido); el caller pasa
+    valores consistentes con esa unidad.
 
-    Returns: 'GO' | 'PIVOT' | 'NO-GO' | 'DEVOLVER'.
+    Devuelve las SALIDAS y `faltan_entradas` (que entrada falto para cada calculo
+    que quedo en None).
+    """
+    p = _num(precio_unitario)
+    cv = _num(costo_variable_unitario)
+    cf = _num(costos_fijos_mensuales)
+    cac = _num(cac_clp)
+    vida = _num(vida_cliente_meses)
 
-    DEVOLVER (C6) tiene prioridad: sin entender el caso no se puede resolver; el
-    orquestador rutea a una **reunión con el cliente**, NO a un nuevo Deep Research
-    (eso es PIVOT).
+    faltan: list[str] = []
+    r: dict = {
+        "margen_contribucion_unitario": None,
+        "margen_contribucion_pct": None,
+        "ltv_clp": None,
+        "ltv_cac_ratio": None,
+        "payback_cac_meses": None,
+        "punto_equilibrio_unidades": None,
+        "punto_equilibrio_clp": None,
+    }
+
+    if p is None or cv is None:
+        faltan.append("precio_unitario y/o costo_variable_unitario")
+    else:
+        mcu = p - cv
+        r["margen_contribucion_unitario"] = round(mcu, 2)
+        r["margen_contribucion_pct"] = _pct(mcu / p) if p else None
+
+        # LTV (modelos recurrentes)
+        if vida is not None:
+            r["ltv_clp"] = round(mcu * vida, 2)
+            if cac is not None and cac > 0:
+                r["ltv_cac_ratio"] = round((mcu * vida) / cac, 2)
+        elif cac is not None:
+            faltan.append("vida_cliente_meses (para LTV / LTV-CAC)")
+
+        # Payback de CAC (en periodos unitarios; si la unidad es cliente/mes -> meses)
+        if cac is not None and mcu > 0:
+            r["payback_cac_meses"] = round(cac / mcu, 1)
+
+        # Punto de equilibrio
+        if cf is not None and mcu > 0:
+            pe_u = cf / mcu
+            r["punto_equilibrio_unidades"] = round(pe_u, 1)
+            r["punto_equilibrio_clp"] = round(pe_u * p, 0)
+        elif cf is None:
+            faltan.append("costos_fijos_mensuales (para punto de equilibrio)")
+
+    if cac is None:
+        faltan.append("cac_clp (para payback / LTV-CAC)")
+
+    r["faltan_entradas"] = faltan
+    return r
+
+
+# ---------- Proyeccion financiera (EVAL_P4) ----------
+def proyeccion(precio_unitario, costo_variable_unitario, costos_fijos_mensuales,
+               unidades_ano_1, crecimiento_anual_pct, horizonte_anios) -> list[dict]:
+    """Proyeccion anual simple: las unidades crecen a tasa constante; ingresos y
+    costos se derivan de los unit economics.
+
+    SUPUESTO v1 (POR VALIDAR): precio_unitario y costo_variable_unitario se toman
+    como el ingreso / costo variable ANUAL por unidad activa. Si el modelo es
+    mensual, el caller anualiza (x12) antes de llamar. costos_fijos_mensuales se
+    anualiza aqui (x12).
+    """
+    p = _num(precio_unitario) or 0.0
+    cv = _num(costo_variable_unitario) or 0.0
+    cf = (_num(costos_fijos_mensuales) or 0.0) * 12
+    u = _num(unidades_ano_1) or 0.0
+    g = (_num(crecimiento_anual_pct) or 0.0) / 100.0
+    n = int(_num(horizonte_anios) or 0)
+
+    filas = []
+    for anio in range(1, n + 1):
+        unidades = u * ((1 + g) ** (anio - 1))
+        ingresos = unidades * p
+        costos = unidades * cv + cf
+        filas.append({
+            "anio": anio,
+            "unidades": round(unidades, 1),
+            "ingresos_clp": round(ingresos, 0),
+            "costos_clp": round(costos, 0),
+            "resultado_clp": round(ingresos - costos, 0),
+        })
+    return filas
+
+
+def proyeccion_escenarios(unit_in: dict, escenarios: list[dict], horizonte_anios: int) -> list[dict]:
+    """Corre proyeccion() para cada escenario y le adjunta su tabla anual (`anios`).
+
+    unit_in: {precio_unitario, costo_variable_unitario, costos_fijos_mensuales}
+    escenarios: lista de {nombre, unidades_ano_1, crecimiento_anual_pct, ...}
+    """
+    salida = []
+    for e in escenarios or []:
+        filas = proyeccion(
+            unit_in.get("precio_unitario"), unit_in.get("costo_variable_unitario"),
+            unit_in.get("costos_fijos_mensuales"),
+            e.get("unidades_ano_1"), e.get("crecimiento_anual_pct"), horizonte_anios,
+        )
+        salida.append({**e, "anios": filas})
+    return salida
+
+
+# ---------- Encaje con el mercado (EVAL_P4) ----------
+def encaje_mercado(ingresos_ano_final_clp=None, som_clp=None) -> dict:
+    """Cruza los ingresos proyectados del ultimo anio (escenario base) con el SOM.
+
+    penetracion_som_pct > 1.0 = la proyeccion no cabe en el mercado obtenible
+    estimado; hay que revisar la proyeccion o el SOM.
+    """
+    ing = _num(ingresos_ano_final_clp)
+    som = _num(som_clp)
+    pen = round(ing / som, 4) if (ing is not None and som) else None
+    if pen is None:
+        estado = "sin_dato"
+    elif pen > UMBRALES["penetracion_som_pct_critico"]:
+        estado = "critico"
+    elif pen > UMBRALES["penetracion_som_pct_alerta"]:
+        estado = "alerta"
+    else:
+        estado = "ok"
+    return {
+        "ingresos_ano_final_base_clp": ing,
+        "som_clp": som,
+        "penetracion_som_pct": pen,
+        "estado": estado,
+    }
+
+
+# ---------- Indicadores de viabilidad (EVAL_P5) ----------
+def _fila(indicador, valor, umbral, estado):
+    return {"indicador": indicador, "valor": valor, "umbral": umbral, "estado": estado}
+
+
+def indicadores_viabilidad(ue: dict, enc: dict | None = None) -> list[dict]:
+    """Evalua cada indicador clave contra su umbral (de parametros.json).
+
+    ue: salida de unit_economics(). enc: salida de encaje_mercado() (opcional).
+    Estados: ok | alerta | critico | sin_dato.
+    """
+    out = []
+    mcu = ue.get("margen_contribucion_unitario")
+
+    # Margen de contribucion %
+    mc = ue.get("margen_contribucion_pct")
+    u_mc = UMBRALES["margen_contribucion_pct_min"]
+    if mc is None:
+        out.append(_fila("margen_contribucion_pct", None, f">= {u_mc:.0%}", "sin_dato"))
+    elif mc <= 0:
+        out.append(_fila("margen_contribucion_pct", mc, f">= {u_mc:.0%}", "critico"))
+    elif mc < u_mc:
+        out.append(_fila("margen_contribucion_pct", mc, f">= {u_mc:.0%}", "alerta"))
+    else:
+        out.append(_fila("margen_contribucion_pct", mc, f">= {u_mc:.0%}", "ok"))
+
+    # LTV / CAC
+    ratio = ue.get("ltv_cac_ratio")
+    u_r = UMBRALES["ltv_cac_ratio_min"]
+    if ratio is None:
+        out.append(_fila("ltv_cac_ratio", None, f">= {u_r}", "sin_dato"))
+    elif ratio < 1:
+        out.append(_fila("ltv_cac_ratio", ratio, f">= {u_r}", "critico"))
+    elif ratio < u_r:
+        out.append(_fila("ltv_cac_ratio", ratio, f">= {u_r}", "alerta"))
+    else:
+        out.append(_fila("ltv_cac_ratio", ratio, f">= {u_r}", "ok"))
+
+    # Payback de CAC
+    pb = ue.get("payback_cac_meses")
+    u_pb = UMBRALES["payback_cac_meses_max"]
+    if pb is None and mcu is not None and mcu <= 0:
+        out.append(_fila("payback_cac_meses", None, f"<= {u_pb}", "critico"))
+    elif pb is None:
+        out.append(_fila("payback_cac_meses", None, f"<= {u_pb}", "sin_dato"))
+    elif pb > 2 * u_pb:
+        out.append(_fila("payback_cac_meses", pb, f"<= {u_pb}", "critico"))
+    elif pb > u_pb:
+        out.append(_fila("payback_cac_meses", pb, f"<= {u_pb}", "alerta"))
+    else:
+        out.append(_fila("payback_cac_meses", pb, f"<= {u_pb}", "ok"))
+
+    # Penetracion de SOM (si hay encaje)
+    if enc:
+        out.append(_fila("penetracion_som_pct", enc.get("penetracion_som_pct"),
+                         f"<= {UMBRALES['penetracion_som_pct_alerta']:.0%}",
+                         enc.get("estado", "sin_dato")))
+    return out
+
+
+# ---------- Compuerta de viabilidad (EVAL_P5) ----------
+def compuerta_viabilidad(indicadores: list[dict], info_suficiente: bool = True,
+                         punto_equilibrio_clp=None, som_clp=None,
+                         resultado_optimista_final_clp=None) -> dict:
+    """Decision de flujo tras la revision del modelo. Determinista; no la decide el LLM.
+
+    Reglas (v1, POR VALIDAR con ingenieria comercial):
+      DEVOLVER  -> info_suficiente es False (faltan datos del cliente para evaluar).
+      INVIABLE  -> el modelo no cierra ni en el mejor caso razonable:
+                     - punto de equilibrio > SOM (no se alcanza dentro del mercado
+                       obtenible), o
+                     - el resultado del ultimo anio del escenario OPTIMISTA es < 0.
+      AJUSTAR   -> hay indicadores 'critico'/'alerta' o falta dato, pero el modelo
+                   podria cerrar moviendo palancas (pricing, segmento, canal, costos).
+      SOLIDO    -> todos los indicadores con dato estan 'ok'.
+
+    Returns: {compuerta, motivos, criticos, alertas, sin_dato}.
     """
     if info_suficiente is False:
-        return "DEVOLVER"
-    voto = (voto_comite or "").strip().lower()
-    if not es_id:
-        return "NO-GO"
-    if voto in ("aprobado i+d", "aprobado", "go"):
-        return "GO"
-    if voto in ("condicionado a ajustes", "condicionado", "pivot"):
-        return "PIVOT"
-    return "NO-GO"
+        return {"compuerta": "DEVOLVER",
+                "motivos": ["Informacion insuficiente del cliente para evaluar el modelo."],
+                "criticos": [], "alertas": [], "sin_dato": []}
+
+    criticos = [i["indicador"] for i in indicadores if i.get("estado") == "critico"]
+    alertas = [i["indicador"] for i in indicadores if i.get("estado") == "alerta"]
+    sin_dato = [i["indicador"] for i in indicadores if i.get("estado") == "sin_dato"]
+
+    pe = _num(punto_equilibrio_clp)
+    som = _num(som_clp)
+    opt = _num(resultado_optimista_final_clp)
+    motivos: list[str] = []
+    inviable = False
+    if pe is not None and som is not None and pe > som:
+        inviable = True
+        motivos.append(f"El punto de equilibrio (${pe:,.0f}) supera el mercado obtenible SOM "
+                       f"(${som:,.0f}): el modelo no cubre sus costos fijos dentro del mercado alcanzable.")
+    if opt is not None and opt < 0:
+        inviable = True
+        motivos.append("Incluso el escenario optimista termina con resultado negativo en el ultimo anio.")
+    if inviable:
+        return {"compuerta": "INVIABLE", "motivos": motivos,
+                "criticos": criticos, "alertas": alertas, "sin_dato": sin_dato}
+
+    if criticos or alertas or sin_dato:
+        detalle = []
+        if criticos:
+            detalle.append("criticos: " + ", ".join(criticos))
+        if alertas:
+            detalle.append("alertas: " + ", ".join(alertas))
+        if sin_dato:
+            detalle.append("sin dato: " + ", ".join(sin_dato))
+        motivos.append("; ".join(detalle) + ". Revisar palancas (pricing, segmento, canal, "
+                       "estructura de costos) y/o completar datos, y re-evaluar (EVAL_P4).")
+        return {"compuerta": "AJUSTAR", "motivos": motivos,
+                "criticos": criticos, "alertas": alertas, "sin_dato": sin_dato}
+
+    return {"compuerta": "SÓLIDO",
+            "motivos": ["Todos los indicadores dentro de umbral."],
+            "criticos": [], "alertas": [], "sin_dato": []}
 
 
-# ---------- QA de coherencia de cifras del cliente (C5) ----------
+# ---------- QA de coherencia de cifras del cliente ----------
 def coherencia_cifras_cliente(cifras: list[dict]) -> list[dict]:
     """Detecta inconsistencias entre las cifras DECLARADAS por el cliente en
-    distintos bloques/documentos (tamaño de flota, ahorro, unidades convertibles…).
+    distintos bloques/documentos (nro de clientes, precio, ticket, volumen...).
 
-    A diferencia del QA de veracidad (que verifica fuentes EXTERNAS: papers/patentes),
-    esto chequea la **consistencia interna** de los datos del propio cliente. El motor
-    NO corrige ni silencia: expone la discrepancia como alerta para que el consultor
-    la resuelva con el cliente.
+    A diferencia del QA de veracidad (que verifica fuentes EXTERNAS de mercado),
+    esto chequea la consistencia INTERNA de los datos del propio cliente. El motor
+    no corrige ni silencia: expone la discrepancia como alerta.
 
     Args:
-        cifras: lista de {concepto, valor, unidad?, fuente}. `fuente` = de dónde
-            salió el dato (p.ej. 'reunion-1', 'propuesta.pdf', 'eval_p3').
+        cifras: lista de {concepto, valor, unidad?, fuente}.
 
     Returns:
         lista de {concepto, unidad, estado ('ok'|'alerta'), detalle}, una por
@@ -283,7 +358,7 @@ def coherencia_cifras_cliente(cifras: list[dict]) -> list[dict]:
         for it in items:
             valores[it.get("valor")].append(str(it.get("fuente") or "—"))
         if len(valores) > 1:
-            detalle = "; ".join(f"{v} (según {', '.join(fs)})" for v, fs in valores.items())
+            detalle = "; ".join(f"{v} (segun {', '.join(fs)})" for v, fs in valores.items())
             out.append({"concepto": concepto or "—", "unidad": unidad, "estado": "alerta",
                         "detalle": f"Valores inconsistentes para el mismo concepto: {detalle}"})
         else:
@@ -292,143 +367,229 @@ def coherencia_cifras_cliente(cifras: list[dict]) -> list[dict]:
     return out
 
 
-# ---------- QA de coherencia de Formulación (FORM_W5) ----------
+# ---------- QA de coherencia del modelo / Fase 2 (FORM_W5) ----------
 def _regla_semantica(nombre: str, confirmado: bool | None, detalle: str) -> dict:
-    """Regla que el motor NO puede juzgar por sí solo; depende de confirmación del agente."""
+    """Regla que el motor NO puede juzgar por si solo; depende de confirmacion del agente."""
     if confirmado is True:
         return {"regla": nombre, "estado": "ok", "detalle": detalle + " (confirmado)"}
     if confirmado is False:
         return {"regla": nombre, "estado": "alerta", "detalle": detalle + " (NO se cumple)"}
-    return {"regla": nombre, "estado": "pendiente", "detalle": detalle + " (requiere confirmación)"}
+    return {"regla": nombre, "estado": "pendiente", "detalle": detalle + " (requiere confirmacion)"}
 
 
-def qa_coherencia_formulacion(*, fase_proyecto_actual: str | None = None,
-                              profesional_contrato_vigente: bool | None = None,
-                              profesional_id_36m: bool | None = None,
-                              nuevo_conocimiento_trazable: bool | None = None,
-                              incertidumbre_justificada: bool | None = None) -> list[dict]:
-    """Las 4 reglas de coherencia de Formulación (Protocolo de Formulación §3).
+def qa_coherencia_modelo(*, mercado: dict | None = None,
+                         penetracion_som_pct: float | None = None,
+                         supuestos: list[dict] | None = None,
+                         supuestos_a_confirmar: list[dict] | None = None,
+                         secciones_formulario: list[dict] | None = None,
+                         cifras_formulario_cuadran: bool | None = None) -> list[dict]:
+    """Reglas de coherencia de la Fase 2 (FORM_W5). Deterministas 1-4; semantica 5.
 
-    Reglas 1-2: deterministas con los datos dados. Reglas 3-4: semánticas (el motor
-    las deja en 'pendiente' salvo confirmación explícita del agente; nunca 'ok' sin ella).
+    Args:
+        mercado: {tam_clp, sam_clp, som_clp} para el chequeo del embudo.
+        penetracion_som_pct: ingresos ultimo anio (base) / SOM.
+        supuestos: supuestos_modelo.supuestos (cada uno {supuesto, confirmado}).
+        supuestos_a_confirmar: impacto_continuidad.supuestos_a_confirmar.
+        secciones_formulario: formulario_oficial.secciones (usa el flag dentro_limite).
+        cifras_formulario_cuadran: el agente confirma que los numeros citados en el
+            formulario coinciden con modelo_negocio.
     """
     out = []
-    # Regla 1: TRL vs fase del proyecto
-    incoherentes = {"Producto Funcional", "Escalando en ventas"}
-    if fase_proyecto_actual in incoherentes:
-        out.append({"regla": "1. TRL vs fase", "estado": "alerta",
-                    "detalle": f"Fase '{fase_proyecto_actual}' incoherente con Ley I+D en desarrollo (TRL 4-5); reajustar a Prototipo/Prototipo Funcional."})
-    elif fase_proyecto_actual:
-        out.append({"regla": "1. TRL vs fase", "estado": "ok", "detalle": f"Fase '{fase_proyecto_actual}' coherente con desarrollo."})
+
+    # Regla 1: embudo de mercado coherente
+    mc = mercado_coherencia(**(mercado or {})) if mercado else None
+    if mc is None:
+        out.append({"regla": "1. Embudo de mercado (TAM>=SAM>=SOM)", "estado": "pendiente",
+                    "detalle": "Sin cifras de mercado."})
+    elif mc["alertas"]:
+        out.append({"regla": "1. Embudo de mercado (TAM>=SAM>=SOM)", "estado": "alerta",
+                    "detalle": " ".join(mc["alertas"])})
+    elif mc["faltan"]:
+        out.append({"regla": "1. Embudo de mercado (TAM>=SAM>=SOM)", "estado": "pendiente",
+                    "detalle": "Faltan: " + ", ".join(mc["faltan"])})
     else:
-        out.append({"regla": "1. TRL vs fase", "estado": "pendiente", "detalle": "Falta la fase del proyecto."})
-    # Regla 2: profesional acreditador (contrato vigente + I+D 36m)
-    if profesional_contrato_vigente is None or profesional_id_36m is None:
-        out.append({"regla": "2. Profesional acreditador", "estado": "pendiente", "detalle": "Faltan datos de contrato/experiencia I+D."})
-    elif profesional_contrato_vigente and profesional_id_36m:
-        out.append({"regla": "2. Profesional acreditador", "estado": "ok", "detalle": "Contrato vigente + experiencia I+D últimos 36m."})
+        out.append({"regla": "1. Embudo de mercado (TAM>=SAM>=SOM)", "estado": "ok",
+                    "detalle": "SOM <= SAM <= TAM."})
+
+    # Regla 2: la proyeccion cabe en el mercado obtenible
+    p = _num(penetracion_som_pct)
+    if p is None:
+        out.append({"regla": "2. Proyeccion vs SOM", "estado": "pendiente",
+                    "detalle": "Sin penetracion de SOM calculada."})
+    elif p > UMBRALES["penetracion_som_pct_critico"]:
+        out.append({"regla": "2. Proyeccion vs SOM", "estado": "alerta",
+                    "detalle": f"La proyeccion captura {p:.0%} del SOM: no cabe en el mercado obtenible estimado."})
     else:
-        falta = [s for s, ok in (("contrato vigente", profesional_contrato_vigente),
-                                 ("experiencia I+D 36m", profesional_id_36m)) if not ok]
-        out.append({"regla": "2. Profesional acreditador", "estado": "alerta", "detalle": "Falta: " + ", ".join(falta)})
-    # Reglas 3-4: semánticas
-    out.append(_regla_semantica("3. Trazabilidad nuevo conocimiento", nuevo_conocimiento_trazable,
-               "El nuevo conocimiento (P8) debe nacer de brechas del estado del arte (P7)."))
-    out.append(_regla_semantica("4. Incertidumbre vs ingeniería estándar", incertidumbre_justificada,
-               "Justificar por qué un ingeniero calificado no podría resolverlo sin experimentar (P11)."))
+        out.append({"regla": "2. Proyeccion vs SOM", "estado": "ok",
+                    "detalle": f"Proyeccion = {p:.0%} del SOM."})
+
+    # Regla 3: los supuestos sin confirmar quedan registrados para confirmar
+    no_conf = [s.get("supuesto") for s in (supuestos or []) if s.get("confirmado") is False]
+    registrados = {s.get("supuesto") for s in (supuestos_a_confirmar or [])}
+    sin_registrar = [s for s in no_conf if s and s not in registrados]
+    if not no_conf:
+        out.append({"regla": "3. Supuestos sin confirmar registrados", "estado": "ok",
+                    "detalle": "No hay supuestos pendientes, o todos estan confirmados."})
+    elif sin_registrar:
+        out.append({"regla": "3. Supuestos sin confirmar registrados", "estado": "alerta",
+                    "detalle": f"{len(sin_registrar)} supuesto(s) sin confirmar fuera de supuestos_a_confirmar: "
+                               + "; ".join(str(s) for s in sin_registrar[:5])})
+    else:
+        out.append({"regla": "3. Supuestos sin confirmar registrados", "estado": "ok",
+                    "detalle": f"{len(no_conf)} supuesto(s) pendiente(s), todos registrados."})
+
+    # Regla 4: respuestas dentro del limite de caracteres
+    secs = secciones_formulario or []
+    fuera = [s.get("id") for s in secs if s.get("dentro_limite") is False]
+    sin_chequear = [s.get("id") for s in secs if s.get("dentro_limite") is None]
+    if not secs:
+        out.append({"regla": "4. Limite de caracteres por seccion", "estado": "pendiente",
+                    "detalle": "Sin secciones redactadas."})
+    elif fuera:
+        out.append({"regla": "4. Limite de caracteres por seccion", "estado": "alerta",
+                    "detalle": "Secciones sobre el tope: " + ", ".join(str(x) for x in fuera)})
+    elif sin_chequear:
+        out.append({"regla": "4. Limite de caracteres por seccion", "estado": "pendiente",
+                    "detalle": "Sin chequear (dentro_limite) en: " + ", ".join(str(x) for x in sin_chequear)})
+    else:
+        out.append({"regla": "4. Limite de caracteres por seccion", "estado": "ok",
+                    "detalle": "Todas dentro del tope."})
+
+    # Regla 5: las cifras del formulario cuadran con el modelo (semantica)
+    out.append(_regla_semantica("5. Cifras del formulario vs modelo", cifras_formulario_cuadran,
+               "Los numeros citados en el formulario (mercado, precio, proyeccion) deben coincidir con modelo_negocio."))
     return out
 
 
+# ---------- autotest ----------
 def _test() -> None:
-    assert frascati(True, True)["cuadrante"] == "I+D"
-    assert frascati(False, True)["es_id"] is True
-    assert frascati(False, False) == {"cuadrante": "Sin I-D", "es_id": False, "elegibilidad_ley_id": "Cero"}
-    assert ley_id_elegible("completa", 5)["elegible"] is True
-    assert ley_id_elegible("simplificada", 5)["elegible"] is False
-    assert ley_id_elegible("completa", 3)["elegible"] is True    # sin TRL mínimo (JP): TRL 3 elegible
-    assert ley_id_elegible("completa", 8)["elegible"] is False   # TRL 8 > máx 7: validación comercial
-    assert ley_id_elegible("completa", 5, presupuesto_clp=100_000_000)["elegible"] is False  # < $200M mín GT
-    assert ley_id_elegible("completa", 5, presupuesto_clp=957_000_000)["elegible"] is True   # caso SRS
-    ch = next(i for i in DATA["instrumentos"] if i["id"] == "capital_humano")
-    assert cofinanciamiento(ch, "Pequeña") == 0.80
-    assert cofinanciamiento(ch, "Grande", lidera_mujer=True) == 0.50
-    el = {x["id"]: x for x in instrumentos_elegibles(trl=4, tamano="Pequeña", antiguedad_meses=20)}
-    assert el["crea_valida"]["elegible"] is False          # antigüedad 20 < 24
-    assert el["capital_humano"]["elegible"] is True         # 20 >= 18, sin TRL piso
-    assert el["innova_alta_tecnologia"]["elegible"] is False  # antigüedad 20 < 36
-    assert compuerta(True, "Aprobado I+D") == "GO"
-    assert compuerta(True, "Condicionado a Ajustes") == "PIVOT"
-    assert compuerta(False, "Aprobado I+D") == "NO-GO"
-    # C6 · DEVOLVER (info insuficiente) tiene prioridad sobre es_id/voto
-    assert compuerta(True, "Aprobado I+D", info_suficiente=False) == "DEVOLVER"
-    assert compuerta(False, "Rechazado I+D", info_suficiente=False) == "DEVOLVER"
-    # C1 · Frascati — prueba de exclusiones
-    ex_ok = [{"exclusion": e, "veredicto": "sorteada", "sustento": "sustento del estado del arte"}
-             for e in EXCLUSIONES_LEY_ID]
-    assert frascati(True, True, ex_ok)["es_id_defendible"] is True
-    assert frascati(True, True, ex_ok)["defendibilidad"]["estado"] == "defendible"
-    ex_aplica = [{"exclusion": "adquisicion_puesta_en_marcha", "veredicto": "aplica", "sustento": "compra e instalación"}]
-    r_ex = frascati(True, False, ex_aplica)               # afirma I pero cae en una exclusión
-    assert r_ex["es_id"] is True and r_ex["es_id_defendible"] is False
-    assert "adquisicion_puesta_en_marcha" in r_ex["exclusiones"]["exclusiones_que_aplican"]
-    # C1-bis · REGRESIÓN: 'pendiente' NO cierra una exclusión (defecto detectado 14-ago-2026).
-    # Antes, cinco 'pendiente' devolvían es_id_defendible=True: falso positivo de manual.
-    ex_pend = [{"exclusion": e, "veredicto": "pendiente", "sustento": "no indagado"} for e in EXCLUSIONES_LEY_ID]
-    r_p = frascati(True, True, ex_pend)
-    assert r_p["es_id_defendible"] is False, "un 'pendiente' no puede pasar por 'sorteada'"
-    assert r_p["exclusiones"]["exclusiones_pendientes"] == EXCLUSIONES_LEY_ID
-    # …y el bloqueo se declara como INCOMPLETO (se cierra indagando), no como rechazo.
-    assert r_p["defendibilidad"]["estado"] == "incompleto"
-    assert r_p["defendibilidad"]["como_destrabar"], "debe decir cómo destrabar, no solo que no se puede"
-    # Un flanco real se distingue de la falta de indagación: pide REENCUADRE, no más análisis.
-    assert frascati(True, True, ex_aplica + [{"exclusion": e, "veredicto": "sorteada", "sustento": "ok"}
-                    for e in EXCLUSIONES_LEY_ID if e != "adquisicion_puesta_en_marcha"]
-                    )["defendibilidad"]["estado"] == "requiere_reencuadre"
-    # Mezcla: un pendiente basta para bloquear aunque las otras cuatro estén sorteadas.
-    ex_mix = [{"exclusion": e, "veredicto": ("pendiente" if e == "novedad_solo_local" else "sorteada"),
-               "sustento": "s"} for e in EXCLUSIONES_LEY_ID]
-    assert frascati(True, True, ex_mix)["es_id_defendible"] is False
-    assert frascati(True, True)["es_id"] is True and "es_id_defendible" not in frascati(True, True)  # sin exclusiones: compat
-    # C5 · coherencia de cifras del cliente
+    # --- Mercado ---
+    assert mercado_coherencia(tam_clp=1_000_000_000, sam_clp=300_000_000, som_clp=30_000_000)["ok"] is True
+    assert mercado_coherencia(tam_clp=100, sam_clp=200)["alertas"], "SAM>TAM debe alertar"
+    assert mercado_coherencia(som_clp=10)["faltan"] == ["TAM", "SAM"]
+
+    # --- Unit economics (precio 100k, cv 40k, fijos 5M/mes, CAC 120k, vida 24m) ---
+    ue = unit_economics(precio_unitario=100_000, costo_variable_unitario=40_000,
+                        costos_fijos_mensuales=5_000_000, cac_clp=120_000, vida_cliente_meses=24)
+    assert ue["margen_contribucion_unitario"] == 60_000
+    assert ue["margen_contribucion_pct"] == 0.6
+    assert ue["ltv_clp"] == 60_000 * 24
+    assert ue["ltv_cac_ratio"] == round((60_000 * 24) / 120_000, 2)   # 12.0
+    assert ue["payback_cac_meses"] == 2.0
+    assert ue["punto_equilibrio_unidades"] == round(5_000_000 / 60_000, 1)
+    assert ue["punto_equilibrio_clp"] == round((5_000_000 / 60_000) * 100_000, 0)
+    assert not ue["faltan_entradas"], ue["faltan_entradas"]
+
+    # margen negativo: sin payback, sin punto de equilibrio
+    ue_neg = unit_economics(precio_unitario=100, costo_variable_unitario=150,
+                            costos_fijos_mensuales=1000, cac_clp=50)
+    assert ue_neg["margen_contribucion_unitario"] == -50
+    assert ue_neg["payback_cac_meses"] is None
+    assert ue_neg["punto_equilibrio_unidades"] is None
+
+    # faltan entradas
+    assert "cac_clp (para payback / LTV-CAC)" in unit_economics(precio_unitario=100, costo_variable_unitario=40)["faltan_entradas"]
+
+    # --- Proyeccion (100 u anio 1, +20%/anio, 3 anios) ---
+    filas = proyeccion(precio_unitario=1_000_000, costo_variable_unitario=400_000,
+                       costos_fijos_mensuales=2_000_000, unidades_ano_1=100,
+                       crecimiento_anual_pct=20, horizonte_anios=3)
+    assert len(filas) == 3
+    assert filas[0]["unidades"] == 100.0
+    assert filas[0]["ingresos_clp"] == 100_000_000
+    assert filas[0]["costos_clp"] == 100 * 400_000 + 24_000_000   # 64M
+    assert filas[0]["resultado_clp"] == 36_000_000
+    assert filas[2]["unidades"] == round(100 * 1.2 ** 2, 1)       # 144.0
+
+    esc = proyeccion_escenarios(
+        {"precio_unitario": 1_000_000, "costo_variable_unitario": 400_000, "costos_fijos_mensuales": 2_000_000},
+        [{"nombre": "base", "unidades_ano_1": 100, "crecimiento_anual_pct": 20}], 3)
+    assert esc[0]["nombre"] == "base" and len(esc[0]["anios"]) == 3
+
+    # --- Encaje con el mercado ---
+    assert encaje_mercado(ingresos_ano_final_clp=200_000_000, som_clp=1_000_000_000) == \
+        {"ingresos_ano_final_base_clp": 200_000_000.0, "som_clp": 1_000_000_000.0,
+         "penetracion_som_pct": 0.2, "estado": "ok"}
+    assert encaje_mercado(ingresos_ano_final_clp=1_200, som_clp=1_000)["estado"] == "critico"
+    assert encaje_mercado(ingresos_ano_final_clp=300, som_clp=1_000)["estado"] == "alerta"
+
+    # --- Indicadores + compuerta ---
+    enc_ok = encaje_mercado(200_000_000, 1_000_000_000)
+    ind_ok = indicadores_viabilidad(ue, enc_ok)
+    estados = {i["indicador"]: i["estado"] for i in ind_ok}
+    assert estados == {"margen_contribucion_pct": "ok", "ltv_cac_ratio": "ok",
+                       "payback_cac_meses": "ok", "penetracion_som_pct": "ok"}, estados
+    g_ok = compuerta_viabilidad(ind_ok, info_suficiente=True,
+                                punto_equilibrio_clp=ue["punto_equilibrio_clp"],
+                                som_clp=1_000_000_000, resultado_optimista_final_clp=50_000_000)
+    assert g_ok["compuerta"] == "SÓLIDO", g_ok
+
+    # DEVOLVER
+    assert compuerta_viabilidad([], info_suficiente=False)["compuerta"] == "DEVOLVER"
+
+    # AJUSTAR: margen bajo el umbral (20% < 30%), LTV/CAC bajo
+    ue_bajo = unit_economics(precio_unitario=100_000, costo_variable_unitario=80_000,
+                             costos_fijos_mensuales=5_000_000, cac_clp=500_000, vida_cliente_meses=6)
+    ind_bajo = indicadores_viabilidad(ue_bajo)
+    g_aj = compuerta_viabilidad(ind_bajo, info_suficiente=True,
+                                punto_equilibrio_clp=ue_bajo["punto_equilibrio_clp"],
+                                som_clp=10_000_000_000, resultado_optimista_final_clp=1)
+    assert g_aj["compuerta"] == "AJUSTAR", g_aj
+
+    # INVIABLE: punto de equilibrio > SOM
+    assert compuerta_viabilidad(ind_ok, info_suficiente=True, punto_equilibrio_clp=5_000_000_000,
+                                som_clp=100_000_000, resultado_optimista_final_clp=10)["compuerta"] == "INVIABLE"
+    # INVIABLE: optimista negativo
+    assert compuerta_viabilidad(ind_ok, info_suficiente=True,
+                                resultado_optimista_final_clp=-1)["compuerta"] == "INVIABLE"
+
+    # --- Coherencia de cifras del cliente ---
     cc = {c["concepto"]: c for c in coherencia_cifras_cliente([
-        {"concepto": "flota", "valor": 120, "unidad": "camiones", "fuente": "reunion-1"},
-        {"concepto": "flota", "valor": 90, "unidad": "camiones", "fuente": "propuesta"},
-        {"concepto": "ahorro", "valor": 30, "unidad": "%", "fuente": "reunion-1"}])}
-    assert cc["flota"]["estado"] == "alerta" and cc["ahorro"]["estado"] == "ok"
-    qa = {r["regla"][0]: r for r in qa_coherencia_formulacion(
-        fase_proyecto_actual="Escalando en ventas",
-        profesional_contrato_vigente=True, profesional_id_36m=False,
-        nuevo_conocimiento_trazable=True)}
-    assert qa["1"]["estado"] == "alerta"   # fase incoherente
-    assert qa["2"]["estado"] == "alerta"   # falta I+D 36m
-    assert qa["3"]["estado"] == "ok"        # confirmado
-    assert qa["4"]["estado"] == "pendiente" # sin confirmar
-    # Arancel — anclado en el caso real SRS (19.041 UTM → 30 UTM → $1.508.160)
-    ar = arancel(19041)
-    assert ar["arancel_utm"] == 30 and ar["arancel_clp"] == 1508160, ar
-    assert arancel(300)["arancel_utm"] == 10        # tramo 1 (plano)
-    assert arancel(1000)["arancel_utm"] == 12.5      # tramo 2
-    assert arancel(5000)["arancel_utm"] == 23.75     # tramo 3
-    assert arancel(50000)["arancel_utm"] == 30       # tope
-    print("OK: motor de reglas — todos los asserts pasan.")
+        {"concepto": "clientes_actuales", "valor": 12, "unidad": "empresas", "fuente": "reunion-1"},
+        {"concepto": "clientes_actuales", "valor": 8, "unidad": "empresas", "fuente": "pitch.pdf"},
+        {"concepto": "precio", "valor": 100000, "unidad": "clp", "fuente": "reunion-2"}])}
+    assert cc["clientes_actuales"]["estado"] == "alerta" and cc["precio"]["estado"] == "ok"
+
+    # --- QA de coherencia del modelo (FORM_W5) ---
+    qa = {r["regla"][0]: r for r in qa_coherencia_modelo(
+        mercado={"tam_clp": 1_000_000_000, "sam_clp": 300_000_000, "som_clp": 30_000_000},
+        penetracion_som_pct=1.5,
+        supuestos=[{"supuesto": "precio 100k", "confirmado": False}],
+        supuestos_a_confirmar=[],
+        secciones_formulario=[{"id": "mercado_objetivo", "dentro_limite": False}],
+        cifras_formulario_cuadran=True)}
+    assert qa["1"]["estado"] == "ok"        # embudo coherente
+    assert qa["2"]["estado"] == "alerta"    # proyeccion 150% del SOM
+    assert qa["3"]["estado"] == "alerta"    # supuesto sin registrar
+    assert qa["4"]["estado"] == "alerta"    # seccion sobre el tope
+    assert qa["5"]["estado"] == "ok"        # confirmado
+
+    print("OK: motor de reglas (modelo de negocio) — todos los asserts pasan.")
 
 
 def _demo() -> None:
-    print("Frascati(I=sí, D=sí):", frascati(True, True))
-    print("Ley I+D (completa, TRL 5):", ley_id_elegible("completa", 5))
-    print("Instrumentos (TRL 4, Pequeña, 30m, lidera mujer):")
-    for r in instrumentos_elegibles(4, "Pequeña", 30, lidera_mujer=True):
-        marca = "✓" if r["elegible"] else "✗"
-        print(f"  {marca} {r['nombre']}: cofin {int(r['cofinanciamiento_pct']*100)}% · "
-              f"tope ${r['tope_subsidio_clp']:,} · {r['motivos'] or 'elegible'}")
-    print("Compuerta(es_id=True, voto='Aprobado I+D'):", compuerta(True, "Aprobado I+D"))
+    # unit economics: valores MENSUALES por cliente (modelo de suscripcion)
+    ue = unit_economics(precio_unitario=100_000, costo_variable_unitario=40_000,
+                        costos_fijos_mensuales=5_000_000, cac_clp=120_000, vida_cliente_meses=24)
+    print("Unit economics:", json.dumps(ue, ensure_ascii=False, indent=2))
+    # proyeccion: se anualiza el ingreso/costo por cliente activo (x12), como pide proyeccion()
+    filas = proyeccion(precio_unitario=100_000 * 12, costo_variable_unitario=40_000 * 12,
+                       costos_fijos_mensuales=5_000_000, unidades_ano_1=200,
+                       crecimiento_anual_pct=30, horizonte_anios=5)
+    print("\nProyeccion (base):")
+    for f in filas:
+        print(f"  anio {f['anio']}: {f['unidades']:.0f} u  ->  ingresos {f['ingresos_clp']:,.0f}  /  "
+              f"resultado {f['resultado_clp']:,.0f}")
+    enc = encaje_mercado(filas[-1]["ingresos_clp"], som_clp=2_000_000_000)
+    ind = indicadores_viabilidad(ue, enc)
+    print("\nIndicadores:", json.dumps(ind, ensure_ascii=False, indent=2))
+    g = compuerta_viabilidad(ind, punto_equilibrio_clp=ue["punto_equilibrio_clp"],
+                             som_clp=2_000_000_000, resultado_optimista_final_clp=filas[-1]["resultado_clp"])
+    print("\nCompuerta:", json.dumps(g, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":
     if "--demo" in sys.argv:
         _demo()
-    elif "--arancel" in sys.argv:
-        i = sys.argv.index("--arancel")
-        print(json.dumps(arancel(float(sys.argv[i + 1])), ensure_ascii=False, indent=2))
     else:
         _test()

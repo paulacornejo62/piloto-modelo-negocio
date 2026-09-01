@@ -12,7 +12,7 @@ Lo que **se instala, se usa y se traspasa al usuario final**. Herramienta agént
 | `CLAUDE.md` | **Instrucciones del agente** al operar la herramienta (rol de orquestador, flujo, reglas transversales). Se carga solo al lanzar `claude` desde aquí. |
 | `.claude/skills/` | Pasos del flujo: onboarding, orquestador, EVAL_P1…P5, PERFIL (Fase 1 CORFO), FORM_W1…W5, QA de veracidad, KB |
 | `.claude/agents/` | Agentes reutilizables: `mn-deep-researcher`, `mn-qa-veracidad` |
-| `motor-reglas/` | Motor determinista: `instrumentos.json` + `reglas.py` (Frascati, elegibilidad, compuerta, QA formulación) · `formularios.json` (formulario oficial por fondo) · `documentos_postulacion.json` (manifiesto del paquete de postulación por fondo) |
+| `motor-reglas/` | Motor determinista: `parametros.json` (umbrales) + `reglas.py` (mercado, unit economics, proyección, compuerta de viabilidad, QA de coherencia) · `formularios.json` (secciones del formulario oficial por fondo) · `documentos_postulacion.json` (manifiesto de entregables por fondo) |
 | `expediente.schema.json` | Contrato del estado de una postulación (los datos tipados que se heredan entre pasos) |
 | `render/` | `render.py` (expediente→md, con **Panel del consultor** al inicio: resumen legible + glosario), `formulario.py` (Formulario Ley I+D), `gantt.py` (Gantt+Presupuesto) |
 | `tools/` | `browse.mjs` (navegador), `fuentes.json`/`.py` (registro de fuentes), `kb.py` (base de conocimiento), `postulacion.py` (paquete de postulación: carpetas + CHECKLIST por fondo), `estado`/`bitacora`/`panel` (flujo y sesiones) |

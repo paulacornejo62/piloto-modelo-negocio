@@ -1,0 +1,20 @@
+{
+  "_descripcion": "Parametros y umbrales del motor de reglas del piloto de modelo de negocio. PRIMERA VERSION: todos los umbrales estan POR VALIDAR con ingenieria comercial. Varian por tipo de negocio (SaaS != hardware != servicios != deep tech). Editar aqui, nunca en reglas.py.",
+  "_actualizado": "2026-09-01",
+  "umbrales": {
+    "margen_contribucion_pct_min": 0.30,
+    "_margen_nota": "Margen de contribucion minimo saludable (precio - costo variable, sobre precio). <= 0 = critico: cada venta pierde plata. Referencia generica; hardware/deep tech toleran menos, SaaS espera mas.",
+    "ltv_cac_ratio_min": 3.0,
+    "_ltv_cac_nota": "LTV/CAC >= 3 es la regla de pulgar clasica (SaaS). < 1 = critico: cuesta mas traer un cliente de lo que deja en toda su vida.",
+    "payback_cac_meses_max": 12,
+    "_payback_nota": "Meses para recuperar el CAC con el margen de contribucion mensual. > umbral = alerta; > 2x umbral = critico. Aplica a modelos recurrentes.",
+    "penetracion_som_pct_alerta": 0.25,
+    "penetracion_som_pct_critico": 1.0,
+    "_penetracion_nota": "Ingresos proyectados del ultimo anio / SOM. > 25% es agresivo (revisar supuestos); > 100% es imposible: la proyeccion no cabe en el mercado obtenible."
+  },
+  "proyeccion": {
+    "horizonte_anios_default": 5,
+    "escenarios": ["pesimista", "base", "optimista"]
+  },
+  "fondos": ["Crea y Valida", "Innova Alta Tecnología", "Consolida y Expande", "Capital Humano"]
+}
