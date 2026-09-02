@@ -1,59 +1,78 @@
-# Cómo correr el sistema (v1 — esqueleto caminante)
+# Cómo correr el piloto
 
-> Estado v1: orquestador + estado + EVAL_P1 + EVAL_P2 + KB + render. Cubre 2 de los 10 pasos; el resto se replica del mismo patrón.
+Piloto de **construcción de modelos de negocio** para las secciones de mercado / modelo /
+escalamiento de subsidios CORFO. Adaptación aislada del motor de formulación de
+financiamiento (F19). Ver [README.md](README.md) para la vista técnica completa y el estado.
 
 ## Estructura
 
 ```
-sistema/
-├── GUIA-USUARIO.md         ← punto de entrada para el consultor (instalar + usar)
-├── .claude/skills/         skills nativos Claude Code
-│   ├── mn-nuevo-proyecto/   onboarding: crea una postulación (tenant) y guía al usuario
+piloto-modelo-negocio/
+├── GUIA-USUARIO.md         ← punto de entrada para el consultor
+├── CLAUDE.md               ← instrucciones del agente (rol, flujo, reglas transversales)
+├── .claude/skills/         skills nativos Claude Code (prefijo mn-)
+│   ├── mn-nuevo-proyecto/   onboarding: crea un caso (tenant) y guía al usuario
 │   ├── mn-orquestar/        orquestador (recorre el flujo)
-│   ├── mn-eval-reunion-1/   EVAL_P1 — Reunión #1 → Perfil Preliminar
-│   ├── mn-eval-deep-research-1/  EVAL_P2 — Deep Research #1 → Minuta v1 + fichas KB
-│   ├── mn-qa-veracidad/     QA de veracidad — verifica hallazgos, descarta alucinaciones
-│   └── mn-estado/           estado / resumen / retomar de una postulación o la cartera
-├── .claude/agents/         agentes reutilizables: mn-deep-researcher · mn-qa-veracidad
-├── tools/                  utilidades CLI: browse.mjs (navegador), fuentes.json/.py (registro de
-│                            fuentes), kb.py (base de conocimiento), estado/bitacora/panel (flujo)
-├── expediente.schema.json  contrato del estado (JSON Schema, con evidencia/cobertura)
-├── render/render.py        validación + render JSON → expediente.md (determinista)
-├── SETUP.md + setup/       instalación transferible (deps, Chromium, smoke test)
-├── .mcp.json               Playwright MCP (navegador para Deep Research)
-├── kb/                     base de conocimiento compartida (índice + grafo propio)
-├── motor-reglas/           (vacío — compuertas/elegibilidad, GTF-06)
-├── plantillas/             (vacío — render de documentos finales)
-└── proyectos/<tenant>/     una postulación aislada (multitenant)
-    ├── entradas/            BUZÓN: inputs del cliente (reunion-1.md, reunion-2.md, docs…)
+│   ├── mn-eval-reunion-1/   EVAL_P1 — Reunión #1 → perfil comercial
+│   ├── mn-eval-deep-research-1/  EVAL_P2 — Investigación de mercado + QA
+│   ├── mn-eval-reunion-2/   EVAL_P3 — Reunión #2 → supuestos del modelo
+│   ├── mn-eval-preparar-caso/  EVAL_P4 — construir el modelo (Canvas + unit economics)
+│   ├── mn-eval-comite/      EVAL_P5 — revisión de viabilidad + compuerta
+│   ├── mn-form-perfil/      PERFIL — Fase 1 CORFO (Crea y Valida / Innova AT)
+│   ├── mn-form-w1…w5/       Fase 2 — redacción de secciones + entrega
+│   ├── mn-qa-veracidad/     QA de veracidad — verifica cifras de mercado
+│   └── mn-estado/           estado / resumen / retomar de un caso o la cartera
+├── .claude/agents/         mn-deep-researcher (investigador de mercado) · mn-qa-veracidad
+├── motor-reglas/           reglas.py (mercado, unit economics, proyección, compuerta) +
+│                            parametros.json (umbrales) + formularios.json + documentos_postulacion.json
+├── tools/                  browse.mjs (navegador), fuentes.json/.py (fuentes de mercado),
+│                            kb.py (base de conocimiento), postulacion.py, estado/bitacora/panel
+├── expediente.schema.json  contrato del estado (los datos tipados que se heredan entre pasos)
+├── render/                 render.py (expediente→md), formulario.py, gantt.py
+├── kb/                     base de conocimiento de mercado (índice + grafo). Arranca vacía.
+└── proyectos/<tenant>/     un caso aislado (multitenant, gitignoreado)
+    ├── entradas/            BUZÓN: inputs del cliente (reunion-1.md, proyecto.md, datos-comerciales.md, docs…)
     ├── expediente.json       estado (contrato)
     └── expediente.md         render legible (generado)
 ```
 
 ## Flujo
 
-1. Crea el tenant: carpeta en `proyectos/<tenant>/` con el buzón `entradas/` (deja ahí las notas de la Reunión #1 y cualquier doc del cliente) y un `expediente.json` semilla (`{"meta":{"tenant":"<t>","paso_actual":"INICIO"}}`).
-2. **Invoca el orquestador** (skill `mn-orquestar`) apuntando al tenant. Él decide el paso según `meta.paso_actual`, invoca el subagente del paso, valida y renderiza.
-   - `INICIO` → EVAL_P1 (perfil preliminar)
-   - `EVAL_P1` → EVAL_P2 (deep research + fichas KB)
-3. Tras cada paso, el estado queda en `expediente.json` y la vista legible en `expediente.md`.
+1. Crea el caso con `mn-nuevo-proyecto`: carpeta en `proyectos/<tenant>/` con el buzón
+   `entradas/` y un `expediente.json` semilla (`meta.tenant`, `meta.paso_actual = "INICIO"`,
+   `meta.instrumento_objetivo` = el fondo CORFO).
+2. Deja en `entradas/` las notas de la Reunión #1, la descripción del proyecto de innovación
+   (`proyecto.md`) y los datos comerciales (`datos-comerciales.md`).
+3. **Invoca el orquestador** (`mn-orquestar`) apuntando al tenant. Decide el paso según
+   `meta.paso_actual`, invoca el subagente del paso, valida y renderiza:
+   - `INICIO` → EVAL_P1 (perfil comercial)
+   - `EVAL_P1` → EVAL_P2 (investigación de mercado + QA)
+   - `EVAL_P2` → EVAL_P3 (supuestos) → EVAL_P4 (construir el modelo) → EVAL_P5 (compuerta)
+   - compuerta **SÓLIDO** → Fase 2 (FORM_W1…W5) → **ENTREGADO**
+4. Tras cada paso, el estado queda en `expediente.json` y la vista legible en `expediente.md`.
 
 ## Comandos (parte determinista)
 
 ```bash
-python3 render/render.py <tenant> --validar   # valida contra el schema
-python3 render/render.py <tenant>             # genera expediente.md
+python3 render/render.py <tenant> --validar     # valida contra el schema
+python3 render/render.py <tenant>               # genera expediente.md
+python3 render/render.py <tenant> --formulario  # completitud de las secciones en alcance
+python3 render/render.py <tenant> --limites     # largo de campos vs. topes
+python3 tools/estado.py <tenant>                # dónde va, qué falta
+python3 tools/panel.py                          # la cartera completa
+python3 motor-reglas/reglas.py --test           # autotest del motor
+python3 motor-reglas/reglas.py --demo           # demo legible del motor
 ```
 
-> **Nota sobre skills**: viven en `sistema/.claude/skills/`. Se vuelven invocables como skills nativos cuando el sistema corre como su **propio proyecto Claude Code** (raíz = `sistema/`, o el repo dedicado al graduar en el traspaso). Dentro del workspace Brinca puedes ejercitarlos pasándole a un subagente el `SKILL.md` del paso + la ruta del tenant.
+## Investigación de mercado (Deep Research)
 
-## Herramientas de investigación (Deep Research)
-
-El Deep Research (EVAL_P2/P4) **exige navegación real**, no WebSearch (ver arquitectura). Playwright (Chromium) es dependencia del tool (`npm install` + `npx playwright install chromium`, lo hace `setup.sh`). Dos vías para usar el navegador:
-
-- **Por Bash (sin reiniciar)** — los skills/agentes corren scripts Node con Playwright (`require('playwright')` desde `sistema/`). Funciona en la sesión actual, no necesita MCP. Es la vía por defecto para *ejecutar* el Deep Research.
-- **Por MCP (interactivo)** — [`.mcp.json`](.mcp.json) expone Playwright como herramientas del agente; se carga al arrancar Claude Code **desde esta carpeta** (`cd sistema && claude`). Útil para exploración interactiva.
-- **Pendiente (GTF-12)**: opcionalmente, MCP de búsqueda profunda por API (Exa/Tavily) para recuperación semántica con texto completo (requiere API key).
+La usa `mn-deep-researcher` con navegador real (`tools/browse.mjs`, Playwright) sobre el
+registro `tools/fuentes.json` (INE, Banco Central, SII, CMF, Mercado Público, gremios,
+prensa de negocios, sitios de competidores). `python3 tools/fuentes.py usables` lista las
+activas. Todo hallazgo pasa por `mn-qa-veracidad` (verificación adversarial de cada cifra,
+su año y su geografía).
 
 ## Sin datos de ejemplo
-El sistema **arranca limpio**: `proyectos/` vacío y KB sin fichas. El fixture de prueba (caso ficticio `_ejemplo`) vive en [`../desarrollo/pruebas/`](../desarrollo/pruebas/), no aquí — es material de *nuestro* desarrollo, no del producto. Para empezar una postulación real usa `mn-nuevo-proyecto`.
+
+El piloto **arranca limpio**: `proyectos/` vacío y KB sin fichas. Para empezar un caso real
+usa `mn-nuevo-proyecto`.

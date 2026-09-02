@@ -44,14 +44,17 @@ frontmatter y todas las referencias cruzadas.
 | Skills — Lote 2 (Fase 1) | `cb8b88b` | `mn-eval-reunion-1` → `perfil_comercial`; `mn-eval-deep-research-1` → `investigacion_mercado` (TAM/SAM/SOM, competidores, precios); `mn-eval-reunion-2` → `supuestos_modelo`; `mn-eval-preparar-caso` → `modelo_negocio` (Canvas + llamadas al motor); `mn-eval-comite` → `revision_viabilidad` (compuerta del motor). |
 | Skills — Lote 3 (Fase 2) | `06bbd0f` | `mn-form-perfil` (Perfil CORFO acotado a modelo de negocio); `mn-form-w1` → `narrativa`; `mn-form-w2` → `formulario_oficial` (solo secciones `en_alcance_piloto`); `mn-form-w3` → `plan_escalamiento`; `mn-form-w4` → `impacto_continuidad`; `mn-form-w5` → `qa_entrega` (entrega, sin envío). |
 
-### Pendiente (próxima sesión)
-1. **`render/*`** — `render.py` valida bien contra el schema nuevo, pero el render a
-   `expediente.md` (Panel, secciones, `--formulario`, `--limites`), `formulario.py` y
-   `gantt.py` todavía referencian bloques viejos. Es el último bloque del orden acordado.
-2. **Docs de nivel raíz** — `SETUP.md`, `COMO-CORRER.md`, `GUIA-USUARIO.md` aún describen el
-   flujo Ley I+D.
-3. **Validación con ingeniería comercial** — los umbrales de `motor-reglas/parametros.json`
-   (margen de contribución mínimo, LTV/CAC, payback, penetración de SOM) y la guía de
-   redacción fina por sección CORFO.
+### Sesión 2026-09-02
 
-Cómo correrlo: **[COMO-CORRER.md](COMO-CORRER.md)** (pendiente de actualizar).
+| Bloque | Commit | Qué cambió |
+|---|---|---|
+| `render/*` + `tools/*.py` | `bdab1d4` | `render.py` reescrito (Panel del consultor + secciones por bloque nuevo; `--formulario` chequea solo `en_alcance_piloto`); `gantt.py` → Unit economics + Proyección + Hitos; `formulario.py` → `formulario-modelo-negocio.md`. `estado.py`/`panel.py`: PASOS/compuerta/`ENTREGADO`. `postulacion.py`: fondo desde `meta.instrumento_objetivo`. Shim UTF-8 en la salida (consola Windows). Probado con expediente sintético completo. |
+| Docs de raíz | `<este commit>` | `SETUP.md`, `COMO-CORRER.md`, `GUIA-USUARIO.md`, `setup/setup.sh` reescritos para el flujo de modelo de negocio. |
+
+### Pendiente
+1. **Validación con ingeniería comercial** — los umbrales de `motor-reglas/parametros.json`
+   (margen de contribución mínimo, LTV/CAC, payback, penetración de SOM) y la guía de
+   redacción fina por sección CORFO (`formularios.json` lo marca como pendiente del equipo GT).
+2. **Prueba con un caso real** end-to-end.
+
+Cómo correrlo: **[COMO-CORRER.md](COMO-CORRER.md)**.

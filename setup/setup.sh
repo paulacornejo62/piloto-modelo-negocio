@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Setup del sistema GTF — deja el tool listo para usar en una máquina nueva.
-# Idempotente: se puede correr varias veces. Ejecutar desde la raíz del sistema:
+# Setup del piloto de modelo de negocio — deja el tool listo en una máquina nueva.
+# Idempotente: se puede correr varias veces. Ejecutar desde la raíz del piloto:
 #   bash setup/setup.sh
 set -euo pipefail
 
-cd "$(dirname "$0")/.."   # raíz del sistema (sistema/)
-echo "== Setup GTF =="
+cd "$(dirname "$0")/.."   # raíz del piloto
+echo "== Setup piloto modelo de negocio =="
 
 # 1. Prerrequisitos (con guía si falta)
 command -v python3 >/dev/null || { echo "FALTA Python 3. Instálalo: https://www.python.org/downloads/ (o 'brew install python3')."; exit 1; }
@@ -37,14 +37,14 @@ command -v pdftotext >/dev/null && echo "ok: pdftotext" || \
 # 5. MCP del navegador presente
 [ -f .mcp.json ] && echo "ok: .mcp.json (Playwright MCP)" || echo "AVISO: falta .mcp.json"
 
-# 6. Smoke test del render/validación (usa el .venv si existe; si no, python3 con fallback)
+# 6. Smoke test del motor de reglas (autotest sin dependencias externas)
 echo "-- smoke test --"
 PY=python3; [ -x .venv/bin/python ] && PY=.venv/bin/python
-"$PY" render/render.py _ejemplo --validar && echo "ok: validación del expediente _ejemplo"
+"$PY" motor-reglas/reglas.py --test
 
 echo ""
 echo "== Setup completo =="
 echo "Próximos pasos:"
-echo "  1) Abre la herramienta:   claude        (desde esta carpeta, sistema/)"
-echo "  2) Empieza una postulación, escríbele:  «Nuevo proyecto de financiamiento para [Empresa]»"
+echo "  1) Abre la herramienta:   claude        (desde esta carpeta)"
+echo "  2) Empieza un caso, escríbele:  «Nuevo caso de modelo de negocio para [Empresa]»"
 echo "  3) Guía de uso completa:  GUIA-USUARIO.md"
