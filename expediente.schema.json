@@ -51,7 +51,7 @@
               "concepto": { "type": "string", "description": "Nombre normalizado del dato (p.ej. 'clientes_actuales', 'precio_unitario', 'ticket_promedio')" },
               "valor": { "description": "Valor declarado (numero o texto)" },
               "unidad": { "type": "string" },
-              "fuente": { "type": "string", "description": "De donde salio: reunion-1, estados-financieros.pdf, eval_p3, etc." }
+              "fuente": { "type": "string", "description": "De donde salio: reunion-1, estados-financieros.pdf, supuestos_modelo, etc." }
             }
           }
         }
