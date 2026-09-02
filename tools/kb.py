@@ -16,6 +16,13 @@ import argparse
 import json
 import re
 from pathlib import Path
+import sys
+
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 KB = Path(__file__).resolve().parent.parent / "kb"
 INDICE = KB / "indice.json"

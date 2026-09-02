@@ -16,6 +16,12 @@ import json
 import sys
 from pathlib import Path
 
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 CFG = Path(__file__).resolve().parent / "fuentes.json"
 USABLES = {"activo", "parcial", "intermitente"}
 ICONO = {"activo": "✅", "parcial": "🟡", "intermitente": "🟡", "requiere_key": "🔑", "bloqueado": "⛔", "manual": "✋"}

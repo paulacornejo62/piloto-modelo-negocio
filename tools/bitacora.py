@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bitácora de sesiones por postulación: guarda y lista avances.
+"""Bitácora de sesiones por caso: guarda y lista avances.
 
 Cada entrada queda en `proyectos/<tenant>/bitacora.md` con fecha, para retomar
 el trabajo sin releer todo. Sin dependencias externas.
@@ -13,6 +13,12 @@ from __future__ import annotations
 import sys
 from datetime import date
 from pathlib import Path
+
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 SISTEMA = Path(__file__).resolve().parent.parent
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Panel de la cartera: todas las postulaciones con su estado de un vistazo.
+"""Panel de la cartera: todos los casos con su estado de un vistazo.
 
-Recorre proyectos/<tenant>/expediente.json y resume paso actual, compuerta y
-última sesión. Sin dependencias externas.
+Recorre proyectos/<tenant>/expediente.json y resume paso actual, compuerta de
+viabilidad y última sesión. Sin dependencias externas.
 
 Uso: python3 tools/panel.py
 """
@@ -10,12 +10,19 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import sys
+
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 SISTEMA = Path(__file__).resolve().parent.parent
 PROY = SISTEMA / "proyectos"
 
-ORDEN = ["INICIO", "EVAL_P1", "EVAL_P2", "EVAL_P3", "EVAL_P4", "EVAL_P5",
-         "FORM_W1", "FORM_W2", "FORM_W3", "FORM_W4", "FORM_W5", "ENVIADO"]
+ORDEN = ["INICIO", "EVAL_P1", "EVAL_P2", "EVAL_P3", "EVAL_P4", "EVAL_P5", "PERFIL",
+         "FORM_W1", "FORM_W2", "FORM_W3", "FORM_W4", "FORM_W5", "ENTREGADO"]
 
 
 def _ultima_sesion(carpeta: Path) -> str:
@@ -43,17 +50,18 @@ def main() -> None:
             avance = f"{ORDEN.index(paso)}/{len(ORDEN) - 1}"
         except ValueError:
             avance = "?"
-        comp = d.get("eval_p5", {}).get("compuerta", "")
-        emp = d.get("eval_p1", {}).get("empresa_razon_social", "")
+        comp = d.get("revision_viabilidad", {}).get("compuerta", "")
+        emp = (d.get("perfil_comercial", {}).get("cliente_razon_social", "")
+               or m.get("cliente_razon_social", ""))
         filas.append((carpeta.name, emp, paso, avance, comp, _ultima_sesion(carpeta)))
 
     if not filas:
-        print("(sin postulaciones)")
+        print("(sin casos)")
         return
-    print(f"{'PROYECTO':16} {'EMPRESA':22} {'PASO':9} {'AVANCE':7} {'COMP':6} ÚLTIMA SESIÓN")
+    print(f"{'CASO':16} {'CLIENTE':22} {'PASO':9} {'AVANCE':7} {'COMP':9} ÚLTIMA SESIÓN")
     for n, emp, paso, av, comp, ses in filas:
-        print(f"{n:16} {emp[:22]:22} {paso:9} {av:7} {comp:6} {ses}")
-    print(f"\n{len(filas)} postulación(es).")
+        print(f"{n:16} {emp[:22]:22} {paso:9} {av:7} {comp:9} {ses}")
+    print(f"\n{len(filas)} caso(s).")
 
 
 if __name__ == "__main__":

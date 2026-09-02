@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Genera la planilla Plan de Trabajo (Carta Gantt + Presupuesto) desde el expediente.
+"""Genera la planilla de Proyección + Hitos comerciales desde el expediente.
 
-Produce un .xlsx **estructurado como el formato oficial CORFO** (hojas Desafíos,
-Gantt I+D, Presupuesto RRHH), pre-poblado con lo que hay en `form_w3` / `eval_p4`.
-NO es la planilla macro oficial: es un **insumo de arranque** que el consultor
-traspasa/valida en el archivo oficial. Requiere openpyxl (en el .venv del setup).
+Produce un .xlsx con tres hojas — Unit economics, Proyección (por escenario) e
+Hitos comerciales — pre-pobladas desde `modelo_negocio` y `plan_escalamiento`.
+Es un **insumo de arranque** que el consultor traspasa/valida al formato del
+fondo. Requiere openpyxl (en el .venv del setup).
 
 Uso: python3 render/gantt.py <tenant>   (mejor con .venv/bin/python)
 """
@@ -12,114 +12,83 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
 import openpyxl
 from openpyxl.styles import Font
 
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 SISTEMA = Path(__file__).resolve().parent.parent
 NEG = Font(bold=True)
 
 
-def _ym(s: str):
-    """'2026-03-01' / '2026-03' → (año, mes) o None."""
-    try:
-        partes = str(s)[:10].replace("/", "-").split("-")
-        return int(partes[0]), int(partes[1])
-    except Exception:
-        return None
-
-
-def _meses(ini, fin):
-    """Lista de (año, mes) entre dos (año,mes) inclusive."""
-    out, y, m = [], ini[0], ini[1]
-    while (y, m) <= fin:
-        out.append((y, m))
-        m = 1 if m == 12 else m + 1
-        y = y + 1 if m == 1 else y
-    return out
-
-
 def construir(datos: dict, destino: Path) -> None:
-    w3 = datos.get("form_w3", {})
+    mn = datos.get("modelo_negocio", {}) or {}
+    pe = datos.get("plan_escalamiento", {}) or {}
+    ue = mn.get("unit_economics", {}) or {}
     wb = openpyxl.Workbook()
 
-    # --- Hoja Desafíos Tecnológicos ---
+    # --- Hoja Unit economics ---
     ws = wb.active
-    ws.title = "Desafíos Tecnológicos"
-    ws.append(["N°", "Nombre del desafío", "Por qué es incierto (incertidumbre)", "Por qué lo superaremos (enfoque)"])
+    ws.title = "Unit economics"
+    ws.append(["Indicador", "Valor", "Tipo"])
     for c in ws[1]:
         c.font = NEG
-    desafios = datos.get("form_w3", {}).get("desafios_tecnologicos", []) or []
-    if desafios:
-        for d in desafios:
-            ws.append([d.get("n", ""), d.get("nombre", ""),
-                       d.get("por_que_incierto", ""), d.get("por_que_superable", "")])
-    else:
-        ws.append(["1", "(completar)", datos.get("eval_p4", {}).get("desafios_tecnicos_consolidados", ""), ""])
+    ws.append(["Unidad del modelo", ue.get("unidad_modelo", ""), "—"])
+    filas_ue = [
+        ("Precio unitario (CLP)", "precio_unitario", "entrada"),
+        ("Costo variable unitario (CLP)", "costo_variable_unitario", "entrada"),
+        ("Costos fijos mensuales (CLP)", "costos_fijos_mensuales", "entrada"),
+        ("CAC (CLP)", "cac_clp", "entrada"),
+        ("Vida del cliente (meses)", "vida_cliente_meses", "entrada"),
+        ("Margen de contribución unitario (CLP)", "margen_contribucion_unitario", "motor"),
+        ("Margen de contribución %", "margen_contribucion_pct", "motor"),
+        ("LTV (CLP)", "ltv_clp", "motor"),
+        ("LTV / CAC", "ltv_cac_ratio", "motor"),
+        ("Payback de CAC (meses)", "payback_cac_meses", "motor"),
+        ("Punto de equilibrio (unidades)", "punto_equilibrio_unidades", "motor"),
+        ("Punto de equilibrio (CLP)", "punto_equilibrio_clp", "motor"),
+    ]
+    for label, k, tipo in filas_ue:
+        ws.append([label, ue.get(k), tipo])
 
-    # --- Hoja Gantt I+D ---
-    actividades = w3.get("actividades", []) or []
-    g = wb.create_sheet("Gantt I+D")
-    rangos = [(_ym(a.get("fecha_inicio")), _ym(a.get("fecha_fin"))) for a in actividades]
-    rangos = [(i, f) for i, f in rangos if i and f]
-    cols_mes = []
-    if rangos:
-        ini = min(i for i, _ in rangos)
-        fin = max(f for _, f in rangos)
-        cols_mes = _meses(ini, fin)
-    encabezado = ["N°", "Objetivo", "Actividad", "Desafío", "Inicio", "Fin"] + [f"{y}-{m:02d}" for y, m in cols_mes]
-    g.append(encabezado)
-    for c in g[1]:
-        c.font = NEG
-    for a in actividades:
-        fila = [a.get("n", ""), a.get("objetivo", ""), a.get("nombre", ""), a.get("desafio_n", ""),
-                a.get("fecha_inicio", ""), a.get("fecha_fin", "")]
-        i, f = _ym(a.get("fecha_inicio")), _ym(a.get("fecha_fin"))
-        for (y, m) in cols_mes:
-            fila.append("X" if (i and f and i <= (y, m) <= f) else "")
-        g.append(fila)
-    if not actividades:
-        g.append(["(sin actividades en el expediente — completar form_w3.actividades)"])
-
-    # --- Hoja Presupuesto RRHH ---
-    pr = wb.create_sheet("Presupuesto RRHH")
-    pr.append(["Empresa", "Cuenta", "Nombre", "Función", "Valor HH", "N° horas", "Total (CLP)"])
+    # --- Hoja Proyección ---
+    pr = wb.create_sheet("Proyección")
+    pr.append(["Escenario", "Año", "Unidades", "Ingresos (CLP)", "Costos (CLP)", "Resultado (CLP)"])
     for c in pr[1]:
         c.font = NEG
-    empresa = datos.get("eval_p1", {}).get("empresa_razon_social", "")
-    total = 0
-    for p in w3.get("personal_asociado", []) or []:
-        vhh = p.get("valor_hh") or 0
-        hh = p.get("horas") or 0
-        sub = round(vhh * hh)
-        total += sub
-        pr.append([empresa, p.get("cuenta", ""), p.get("nombre", ""), p.get("funcion", ""), vhh, hh, sub])
-    r = pr.max_row + 1
-    pr.cell(r, 6, "TOTAL RRHH (por HH×horas)").font = NEG
-    pr.cell(r, 7, total).font = NEG
+    escenarios = (mn.get("proyeccion", {}) or {}).get("escenarios", []) or []
+    if escenarios:
+        for e in escenarios:
+            for a in e.get("anios", []) or []:
+                pr.append([e.get("nombre", ""), a.get("anio", ""), a.get("unidades", ""),
+                           a.get("ingresos_clp", ""), a.get("costos_clp", ""), a.get("resultado_clp", "")])
+    else:
+        pr.append(["(sin proyección en el expediente — completar modelo_negocio.proyeccion)"])
 
-    # Resumen de presupuesto (totales confirmados por el cliente)
-    presu = w3.get("presupuesto", {}) or {}
-    desg = presu.get("desglose", {}) or {}
-    if desg or presu.get("total_clp"):
-        pr.append([])
-        pr.append(["RESUMEN PRESUPUESTO (totales confirmados)"])
-        pr.cell(pr.max_row, 1).font = NEG
-        pr.append(["Ítem", "Monto (CLP)"])
-        for c in pr[pr.max_row]:
-            c.font = NEG
-        for k, v in desg.items():
-            pr.append([k, v])
-        if presu.get("total_clp"):
-            pr.append(["TOTAL", presu["total_clp"]])
-            for c in pr[pr.max_row]:
-                c.font = NEG
+    # --- Hoja Hitos comerciales ---
+    hc = wb.create_sheet("Hitos comerciales")
+    hc.append(["N°", "Hito", "Meta (indicador medible)", "Fecha objetivo"])
+    for c in hc[1]:
+        c.font = NEG
+    hitos = pe.get("hitos_comerciales", []) or []
+    if hitos:
+        for h in hitos:
+            hc.append([h.get("n", ""), h.get("nombre", ""), h.get("meta", ""), h.get("fecha_objetivo", "")])
+    else:
+        hc.append(["(sin hitos en el expediente — completar plan_escalamiento.hitos_comerciales)"])
+    if pe.get("metas_traccion"):
+        hc.append([])
+        hc.append(["Metas de tracción:", pe["metas_traccion"]])
 
     for sh in wb.worksheets:
         for col in sh.columns:
-            sh.column_dimensions[col[0].column_letter].width = 18
+            sh.column_dimensions[col[0].column_letter].width = 24
 
     wb.save(destino)
 
@@ -133,7 +102,7 @@ def main() -> None:
         sys.exit(f"ERROR: no existe {ruta}")
     destino = ruta.parent / "plan-trabajo.xlsx"
     construir(json.loads(ruta.read_text(encoding="utf-8")), destino)
-    print(f"Generado: {destino} (insumo de arranque; traspasar al formato oficial)")
+    print(f"Generado: {destino} (insumo de arranque; traspasar al formato del fondo)")
 
 
 if __name__ == "__main__":

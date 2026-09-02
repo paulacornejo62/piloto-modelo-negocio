@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Paquete de postulación: árbol de carpetas + CHECKLIST de gestión por fondo.
+"""Paquete de entregables del modelo de negocio: árbol de carpetas + CHECKLIST por fondo.
 
-Al entrar a formulación, cada fondo exige reunir un set de documentos (formulario
-técnico, estado del arte, CVs, instrumento de representación, arancel, subcontratos…).
-Este script genera —según el fondo— la estructura de carpetas y un CHECKLIST que
-distingue quién provee cada documento (cliente / brinca / sistema) y su estado, para
-gestionar el armado y **bloquear el envío** hasta que esté completo.
+Al entrar a Fase 2, el piloto arma los entregables de modelo de negocio del fondo
+(investigación de mercado, Canvas + unit economics, proyección, plan de escalamiento,
+secciones del formulario en alcance, impacto/continuidad, supuestos a confirmar) más
+los insumos que aportan el cliente y el consultor. Este script genera —según el
+fondo— la estructura de carpetas y un CHECKLIST que distingue quién provee cada
+documento (cliente / consultor / sistema) y su estado, para gestionar el armado y
+**bloquear la entrega** hasta que esté completo. NO cubre el paquete administrativo
+completo de la postulación (legales, DJ, CVs, arancel): eso es del equipo GT / F19.
 
 El estado vivo se guarda en el bloque `postulacion` del expediente.json (fuente de
 verdad); `CHECKLIST.md` es una proyección legible. Idempotente: re-generar preserva
@@ -25,6 +28,12 @@ import re
 import subprocess
 import sys
 from pathlib import Path
+
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 
 SISTEMA = Path(__file__).resolve().parent.parent
 MANIFIESTO = SISTEMA / "motor-reglas" / "documentos_postulacion.json"
@@ -61,19 +70,11 @@ def _guardar(ruta: Path, datos: dict) -> None:
 
 
 def _resolver_fondo(datos: dict) -> str:
-    """Deduce la clave del fondo desde el expediente (instrumento del comité o meta)."""
-    candidatos = [
-        (datos.get("eval_p5") or {}).get("instrumento_corfo_seleccionado"),
-        (datos.get("meta") or {}).get("instrumento_objetivo"),
-    ]
-    for c in candidatos:
-        if c and (clave := ALIAS_FONDO.get(str(c).strip().lower())):
-            return clave
-    # Ley I+D si el comité marcó aplica_ley_id y no hay instrumento CORFO.
-    if (datos.get("eval_p5") or {}).get("aplica_ley_id"):
-        return "ley_id"
-    sys.exit("ERROR: no se pudo determinar el fondo (define meta.instrumento_objetivo "
-             "o eval_p5.instrumento_corfo_seleccionado).")
+    """Deduce la clave del fondo desde meta.instrumento_objetivo (el piloto no elige fondo)."""
+    c = (datos.get("meta") or {}).get("instrumento_objetivo")
+    if c and (clave := ALIAS_FONDO.get(str(c).strip().lower())):
+        return clave
+    sys.exit("ERROR: no se pudo determinar el fondo (define meta.instrumento_objetivo).")
 
 
 def _manifiesto_fondo(clave: str) -> list[dict]:
@@ -142,7 +143,7 @@ def _render_checklist(tenant: str, clave: str, nombre: str, items: list[dict]) -
            f"> Paquete de documentos para postular. **{listos_obl}/{total_obl} obligatorios listos**"
            f"{' · **LISTO PARA ENVIAR**' if not faltan else f' · faltan {len(faltan)} para enviar'}.",
            "> Estado: ✅ listo/generado · ⬜ pendiente · ➖ opcional/no aplica. "
-           "Responsable: cliente = lo aporta la empresa · brinca = lo arma el consultor · sistema = lo genera el flujo.",
+           "Responsable: cliente = lo aporta la empresa · consultor = lo arma el consultor · sistema = lo genera el flujo.",
            "", "| Carpeta | Documento | Responsable | Estado | Nota |",
            "|---|---|---|---|---|"]
     for i in items:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Estado y resumen de una postulación: dónde va, qué se completó, qué sigue.
+"""Estado y resumen de un caso: dónde va, qué se completó, qué sigue.
 
-Lee el expediente del tenant y lo mapea al flujo (Fase 1 Evaluación + Fase 2
-Formulación), mostrando pasos hechos, paso actual, siguiente acción y bloqueos.
-Sin dependencias externas.
+Lee el expediente del tenant y lo mapea al flujo (Fase 1 Construcción del modelo +
+Fase 2 Redacción de secciones), mostrando pasos hechos, paso actual, siguiente
+acción y bloqueos. Sin dependencias externas.
 
 Uso: python3 tools/estado.py <tenant>
 """
@@ -13,35 +13,42 @@ import json
 import sys
 from pathlib import Path
 
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta ✓/▶
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 SISTEMA = Path(__file__).resolve().parent.parent
 
 # (código, etiqueta, bloque del expediente) en orden del flujo.
 PASOS = [
-    ("EVAL_P1", "Reunión #1 — Perfil preliminar", "eval_p1"),
-    ("EVAL_P2", "Deep Research #1 + QA de veracidad", "eval_p2"),
-    ("EVAL_P3", "Reunión #2 — Perfil técnico v2", "eval_p3"),
-    ("EVAL_P4", "Preparar el caso — Frascati + subsidios", "eval_p4"),
-    ("EVAL_P5", "Comité + compuerta", "eval_p5"),
-    ("FORM_W1", "Formulación: arquitectura técnica", "form_w1"),
-    ("FORM_W2", "Formulación: redacción I+D", "form_w2"),
-    ("FORM_W3", "Formulación: capacidades + Gantt", "form_w3"),
-    ("FORM_W4", "Formulación: admin + encuesta", "form_w4"),
-    ("FORM_W5", "Formulación: QA + envío", "form_w5"),
+    ("EVAL_P1", "Reunión #1 — Perfil comercial", "perfil_comercial"),
+    ("EVAL_P2", "Investigación de mercado + QA", "investigacion_mercado"),
+    ("EVAL_P3", "Reunión #2 — Supuestos del modelo", "supuestos_modelo"),
+    ("EVAL_P4", "Construir el modelo (Canvas + unit economics)", "modelo_negocio"),
+    ("EVAL_P5", "Revisión de viabilidad + compuerta", "revision_viabilidad"),
+    ("FORM_W1", "Redacción: arquitectura de la narrativa", "narrativa"),
+    ("FORM_W2", "Redacción: formulario oficial del fondo", "formulario_oficial"),
+    ("FORM_W3", "Redacción: plan de escalamiento", "plan_escalamiento"),
+    ("FORM_W4", "Redacción: impacto y continuidad", "impacto_continuidad"),
+    ("FORM_W5", "QA de coherencia + entrega", "qa_entrega"),
 ]
 
 SIGUIENTE = {
     "INICIO": "Pega las notas de la Reunión #1 y corre el orquestador (EVAL_P1).",
-    "EVAL_P1": "Deep Research #1: investigar estado del arte (orquestador → EVAL_P2).",
-    "EVAL_P2": "Agenda la Reunión #2 y registra respuestas del cliente (EVAL_P3).",
-    "EVAL_P3": "Preparar el caso: Deep Research #2, Frascati y perfil de subsidios (EVAL_P4).",
-    "EVAL_P4": "Presentar al comité y registrar el acta (EVAL_P5).",
-    "EVAL_P5": "Según la compuerta: GO → Formulación; PIVOT → volver a EVAL_P4; NO-GO → informe al cliente.",
-    "FORM_W1": "Redacción I+D según la clasificación (FORM_W2).",
-    "FORM_W2": "Capacidades + Carta Gantt/Presupuesto (FORM_W3).",
-    "FORM_W3": "Cumplimiento administrativo + encuesta (FORM_W4).",
-    "FORM_W4": "QA de coherencia, generar documentos y enviar (FORM_W5).",
-    "FORM_W5": "Postulación cerrada.",
-    "ENVIADO": "✅ Postulación enviada. Generar/archivar documentos finales.",
+    "EVAL_P1": "Investigación de mercado: tamaño, competidores, precios (orquestador → EVAL_P2).",
+    "EVAL_P2": "Agenda la Reunión #2 y levanta los supuestos del modelo (EVAL_P3).",
+    "EVAL_P3": "Construir el modelo: Canvas + unit economics + proyección (EVAL_P4).",
+    "EVAL_P4": "Revisión de viabilidad y compuerta (EVAL_P5).",
+    "EVAL_P5": "Según la compuerta: SÓLIDO → Fase 2; AJUSTAR → volver a EVAL_P4; DEVOLVER → reunión con el cliente; INVIABLE → informe al cliente.",
+    "PERFIL": "Presentar el Perfil de Proyecto (Fase 1 CORFO) y esperar la retroalimentación.",
+    "FORM_W1": "Redacción: formulario oficial del fondo (FORM_W2).",
+    "FORM_W2": "Plan de escalamiento + proyección + hitos (FORM_W3).",
+    "FORM_W3": "Impacto, continuidad y supuestos a confirmar (FORM_W4).",
+    "FORM_W4": "QA de coherencia, generar documentos y entregar (FORM_W5).",
+    "FORM_W5": "Caso cerrado.",
+    "ENTREGADO": "✅ Paquete de modelo de negocio entregado al consultor.",
 }
 
 
@@ -55,20 +62,20 @@ def main() -> None:
     d = json.loads(ruta.read_text(encoding="utf-8"))
     actual = d.get("meta", {}).get("paso_actual", "INICIO")
 
-    print(f"Postulación: {tenant}  ·  paso actual: {actual}\n")
+    print(f"Caso: {tenant}  ·  paso actual: {actual}\n")
     for code, label, bloque in PASOS:
         hecho = bloque in d
         marca = "✓" if hecho else ("▶" if code == actual else "·")
         print(f"  {marca} {code:8} {label}")
-    # Compuerta
-    comp = d.get("eval_p5", {}).get("compuerta")
+    # Compuerta de viabilidad
+    comp = d.get("revision_viabilidad", {}).get("compuerta")
     if comp:
-        print(f"\n  Compuerta: {comp}" + ("  → Fase 2 habilitada" if comp == "GO" else ""))
-    # QA de formulación
-    qa = d.get("form_w5", {}).get("qa_coherencia")
+        print(f"\n  Compuerta: {comp}" + ("  → Fase 2 habilitada" if comp == "SÓLIDO" else ""))
+    # QA de coherencia (Fase 2)
+    qa = d.get("qa_entrega", {}).get("qa_coherencia")
     if qa:
         alertas = [r for r in qa if r.get("estado") == "alerta"]
-        print(f"  QA formulación: {'⚠️ ' + str(len(alertas)) + ' alerta(s)' if alertas else '✅ sin alertas'}")
+        print(f"  QA coherencia: {'⚠️ ' + str(len(alertas)) + ' alerta(s)' if alertas else '✅ sin alertas'}")
     print(f"\n  Siguiente: {SIGUIENTE.get(actual, '(definir)')}")
 
     bit = ruta.parent / "bitacora.md"

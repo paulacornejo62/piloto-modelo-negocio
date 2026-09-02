@@ -27,6 +27,12 @@ import json
 import sys
 from pathlib import Path
 
+for _s in (sys.stdout, sys.stderr):  # consola Windows (cp1252) no soporta emojis/guiones
+    try:
+        _s.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 PARAMS = json.loads((Path(__file__).resolve().parent / "parametros.json").read_text(encoding="utf-8"))
 UMBRALES = PARAMS["umbrales"]
 
