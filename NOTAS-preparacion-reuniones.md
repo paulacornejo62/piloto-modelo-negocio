@@ -168,6 +168,7 @@ Según lo que se decida (no tocar hasta entonces):
 | Compuerta basada en Canvas + economía simple | `reglas.py` `compuerta_viabilidad`: cambiar de "indicadores fuera de umbral" a "Canvas completo y coherente + margen de contribución > 0 + punto de equilibrio ≤ SOM". |
 | Pricing como decisión explícita | Agregar `supuestos_modelo.estrategia_pricing` (comparación / margen / valor) al schema y pedirlo en `mn-eval-reunion-2`. |
 | Indicadores de tracción estructurados | Formalizar `plan_escalamiento.indicadores_traccion` como lista `{indicador, meta, fecha}`. |
+| **Tracción actual** (gap detectado en el formulario real de Consolida y Expande) | Nuevo bloque `perfil_comercial.traccion_actual`: ventas históricas + comprometidas, año de primera venta, nº clientes/usuarios, pruebas y resultados, capital propio + levantado (% público), % exportación. Se pide en R#1 + tarea de datos. Ver `MAPEO-formularios.md` §4. |
 | Vocabulario Canvas / GTM | Ajustar los `SKILL.md` de `mn-eval-*` para hablar de "lienzo Canvas" y "Go-to-Market" en vez de "unit economics" como eje. |
 
 ---

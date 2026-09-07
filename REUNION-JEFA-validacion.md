@@ -1,8 +1,8 @@
 # Reunión con la jefa — Validación pregunta por pregunta
 
-**Objetivo:** recorrer las preguntas de los formularios que tocan el modelo de negocio (comparando **Crea y Valida 2025** y **Consolida y Expande 2024**, ambos reales) y que la jefa dé **sugerencias por pregunta**. Con eso se ajusta qué se cubre en R#1 vs R#2.
+**Objetivo:** recorrer las preguntas de los formularios que tocan el modelo de negocio (comparando **Crea y Valida 2025**, **Consolida y Expande 2024** e **Innova Alta Tecnología 2022**, los tres reales) y que la jefa dé **sugerencias por pregunta**. Con eso se ajusta qué se cubre en R#1 vs R#2.
 
-**Material:** `MAPEO-formularios.md` (comparación completa) + la página visual del flujo.
+**Material:** `MAPEO-formularios.md` (comparación de los 3 fondos) + la página visual del flujo.
 
 **Ya decidido — no discutir:** el modelo de negocio se levanta en **2 reuniones con el cliente** + 1 búsqueda de mercado independiente.
 
@@ -15,11 +15,12 @@
 
 ## 2. Hallazgo (3 min)
 
-La pregunta central de modelo de negocio es **idéntica en ambos formularios**: CyV *Impacto Q1* = CyE *Estrategia de Negocio Q1*, palabra por palabra (clientes, cómo se cobra, % mercado, captar/fidelizar, canales, **supuestos + fuentes de datos**).
+La pregunta central de modelo de negocio es **idéntica en los tres formularios**: CyV *Impacto Q1* = CyE *Estrategia de Negocio Q1* = Innova AT *Modelo de Negocios Q2* (clientes, cómo se cobra, % mercado, captar/fidelizar, canales, **supuestos + fuentes de datos**). Y se repite entre convocatorias del mismo fondo → **la estructura es estable**; el piloto se construye contra ella, no contra un llamado puntual.
 
-Diferencia entre fondos:
-- **Crea y Valida** la pregunta una vez (a futuro) y pone la tracción actual en la **Encuesta** (números).
-- **Consolida y Expande** la pregunta **y agrega una sección Escalabilidad** que exige la **tracción actual como texto abierto evaluado** — ventas a la fecha + comprometidas, clientes con pruebas y resultados, capital levantado. Porque es para escalar algo que **ya vende**.
+Diferencia de énfasis:
+- **Crea y Valida** e **Innova AT**: la pregunta a futuro; la tracción actual va en la **Encuesta** (números).
+- **Consolida y Expande** agrega una sección **Escalabilidad** que exige la **tracción actual como texto abierto evaluado** — ventas a la fecha + comprometidas, clientes con pruebas y resultados, capital levantado. Porque es para escalar algo que **ya vende**.
+- **Innova AT** empuja fuerte la **continuidad financiera** (levantar capital: VC, préstamos, alianzas) y fija el horizonte de proyección **a 3 años**.
 
 ## 3. La columna vertebral — pregunta por pregunta (30 min)
 

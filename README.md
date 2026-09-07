@@ -59,7 +59,8 @@ Para las reuniones con el líder (flujo general de un subsidio, nº de reuniones
 | Archivo | Commit | Qué es |
 |---|---|---|
 | `NOTAS-preparacion-reuniones.md` | `9b8fa13` | Prep personal completa: los **dos lenguajes** (Canvas / Go-to-Market — lo que enseña el curso CORFO Conecta y pide CORFO — vs. unit economics del motor); glosario simple de los términos financieros; la herramienta de captura estilo Canvas mapeada a R#1 / Mercado / R#2; preguntas de los formularios por fondo. |
-| `REUNION-JEFA-validacion.md` | `de0edca` | Doc para la jefa: se recorre **cada pregunta del formulario de Crea y Valida que toca el modelo de negocio**, con cómo la aborda el piloto (bloque + insumo + reunión) y una fila "Sugerencia de la jefa" a llenar; + dónde difieren los otros 3 fondos. Con las sugerencias se ajusta R#1 / R#2. |
+| `MAPEO-formularios.md` | `a3f07f6` · `9a9a807` · *(este)* | Comparación de **tres formularios reales** (Crea y Valida 2025, Consolida y Expande 2024, Innova Alta Tecnología 2022): la columna vertebral compartida (S1–S14) mapeada a bloque del piloto / GT / mixto y a la reunión donde se levanta; preguntas específicas por fondo; el gap de "tracción actual". Referencia viva (verificar contra las bases del llamado). |
+| `REUNION-JEFA-validacion.md` | `de0edca` · `9a9a807` | Guion para la jefa: recorrer las 9 preguntas de la columna vertebral (S1–S10) que aparecen en los 3 formularios, con cómo la aborda el piloto + fila "Sugerencia de la jefa"; + lo propio de Consolida y Expande (escalamiento + tracción actual). Con las sugerencias se ajusta R#1 / R#2. |
 | Página visual del flujo | — (artifact) | Lámina proyectable: pipeline P1…P5 + compuerta + Fase 2 + qué se levanta en cada instancia. Privada; se comparte desde la propia página. |
 
 **Hallazgo clave:** el motor sobre-indexó en métricas de startup digital (LTV, CAC, payback).
