@@ -59,7 +59,7 @@ Para las reuniones con el líder (flujo general de un subsidio, nº de reuniones
 | Archivo | Commit | Qué es |
 |---|---|---|
 | `NOTAS-preparacion-reuniones.md` | `9b8fa13` | Prep personal completa: los **dos lenguajes** (Canvas / Go-to-Market — lo que enseña el curso CORFO Conecta y pide CORFO — vs. unit economics del motor); glosario simple de los términos financieros; la herramienta de captura estilo Canvas mapeada a R#1 / Mercado / R#2; preguntas de los formularios por fondo. |
-| `REUNION-JEFA-validacion.md` | `df23b44` | Doc de 60 min para la jefa: flujo definido + qué se levanta en cada instancia + **tabla de supuestos que se levantan con el cliente** (a validar) + 5 definiciones a cerrar. |
+| `REUNION-JEFA-validacion.md` | `de0edca` | Doc para la jefa: se recorre **cada pregunta del formulario de Crea y Valida que toca el modelo de negocio**, con cómo la aborda el piloto (bloque + insumo + reunión) y una fila "Sugerencia de la jefa" a llenar; + dónde difieren los otros 3 fondos. Con las sugerencias se ajusta R#1 / R#2. |
 | Página visual del flujo | — (artifact) | Lámina proyectable: pipeline P1…P5 + compuerta + Fase 2 + qué se levanta en cada instancia. Privada; se comparte desde la propia página. |
 
 **Hallazgo clave:** el motor sobre-indexó en métricas de startup digital (LTV, CAC, payback).
@@ -68,17 +68,19 @@ el motor en (a) completitud/coherencia del lienzo Canvas, (b) tamaño de mercado
 contribución > 0 y punto de equilibrio ≤ SOM, (d) proyección de ventas.
 
 ### Pendiente
-1. **Reunión con el líder** (flujo general): acordar nº de reuniones por fondo (posición:
-   2 + tarea de datos; 3 para Consolida y Expande) y dónde se inserta el modelo de negocio
-   en el mes de postulación.
-2. **Reunión con la jefa**: cerrar 5 definiciones — estrategia de pricing por defecto, qué
-   hace un modelo "no postulable", si LTV/CAC/payback aplican siempre o solo a recurrentes,
-   indicadores de tracción a pedir, bottom-up vs. top-down. Ver `REUNION-JEFA-validacion.md` §5.
-3. **Aplicar al piloto** los cambios que salgan de las reuniones (ver `NOTAS-preparacion-reuniones.md`
+1. **Decidido:** el modelo de negocio se levanta en **2 reuniones** con el cliente (+ 1
+   búsqueda de mercado). Excepción a validar: 3 para Consolida y Expande, 1 para Capital Humano.
+2. **Reunión con el líder** (flujo general): dónde se inserta el modelo de negocio en el mes
+   de postulación al subsidio.
+3. **Reunión con la jefa**: recorrer las 5 preguntas del formulario de Crea y Valida que toca
+   el piloto y recoger sus sugerencias por pregunta → ajustar qué se cubre en R#1 vs R#2
+   (`REUNION-JEFA-validacion.md` §3). Confirmar caso real (Crea y Valida rechazado),
+   ingeniero comercial y formato de entrega a F19.
+4. **Aplicar al piloto** los cambios que salgan de las reuniones (ver `NOTAS-preparacion-reuniones.md`
    Parte 4: `parametros.json`, `compuerta_viabilidad`, `estrategia_pricing` en el schema,
    vocabulario Canvas en los `SKILL.md`).
-4. **Prueba con un caso real** end-to-end — candidato: el modelo de negocio de la postulación
-   a Crea y Valida que se rechazó.
-5. Guía de redacción fina por sección CORFO: la aporta F19 (donde se formula contra las bases).
+5. **Prueba con un caso real** end-to-end — el modelo de negocio de la postulación a Crea y
+   Valida que se rechazó.
+6. Guía de redacción fina por sección CORFO: la aporta F19 (donde se formula contra las bases).
 
 Cómo correrlo: **[COMO-CORRER.md](COMO-CORRER.md)**.
