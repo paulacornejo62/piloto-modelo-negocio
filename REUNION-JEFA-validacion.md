@@ -1,124 +1,120 @@
-# Reunión con la jefa — Validación del flujo de modelo de negocio
+# Reunión con la jefa — Validación pregunta por pregunta
 
-**Objetivo:** que revises (a) el flujo que tenemos definido, (b) qué se levanta en cada reunión y en la búsqueda de mercado, (c) **los supuestos que levantamos con el cliente** para construir el modelo, y (d) un set de definiciones para cerrar.
+**Objetivo:** recorrer **cada pregunta del formulario que toca el modelo de negocio**, mostrar **cómo pretendo abordarla** (qué levanto y en qué reunión), y que ella dé **sugerencias por pregunta**. Con eso ajustamos qué se cubre en R#1 vs R#2.
 
-**Qué necesito de ti hoy:**
-1. Visto bueno (o ajustes) al flujo y al nº de reuniones.
-2. **Validar la lista de supuestos que le pedimos al cliente** (sección 4).
-3. Cerrar 5 definiciones (sección 5): pricing por defecto, qué hace un modelo no postulable, cuándo usar LTV/CAC, indicadores de tracción, bottom-up vs top-down.
+**Fondo de referencia:** Crea y Valida (es el del caso real rechazado). Al final, dónde difieren los otros 3 fondos.
+
+**Ya decidido — no discutir:** el modelo de negocio se levanta en **2 reuniones con el cliente** + 1 búsqueda de mercado independiente. (El orden general de la formulación al subsidio lo veo con José Pablo por separado.)
 
 ---
 
 ## 1. Contexto (2 min)
 
-- Piloto **aislado** para construir el **modelo de negocio** de un proyecto y redactar las secciones de **mercado / modelo / escalamiento** del formulario del subsidio CORFO.
-- El resto del formulario (metodología técnica, actividades de I+D, equipo) y la formulación final la hace **F19**.
-- No hay envío en plataforma: el piloto **entrega un borrador** que F19 integra.
-- Si funciona → se propone como expansión de F19 (PR, coordinando con Pablo Ferreiro).
+- El piloto construye el **modelo de negocio** y redacta las secciones de **mercado / modelo / escalamiento**. Metodología técnica, actividades de I+D y equipo → **F19**.
+- No hay envío en plataforma: el piloto **entrega un borrador**; F19 lo integra al formulario completo.
 
-## 2. El flujo definido (5 min)
+## 2. El flujo, de un vistazo (3 min)
 
-**Fase 1 — Construir el modelo** · 2 reuniones con el cliente + 1 búsqueda de mercado independiente:
+`R#1` (con cliente) → `Búsqueda de mercado` (sin cliente) → `R#2` (con cliente) → `Construir el modelo` → `Compuerta` → *(si sólido)* redacción → entrega a F19.
 
-```
-R#1  Perfil comercial + solución  ──►  (tarea de datos al cliente)
-        │
-   Búsqueda de mercado (sin cliente, verificada cifra por cifra)
-        │
-R#2  Completar el lienzo Canvas
-        │
-   Construir el modelo (Canvas + economía simple + proyección de ventas)
-        │
-   Revisión ──► compuerta:
-        SÓLIDO    → Fase 2 (redacción)
-        AJUSTAR   → mover palancas (pricing / segmento / canal / costos) y recalcular
-        INVIABLE  → informe al cliente
-        DEVOLVER  → otra reunión con el cliente
-```
+> Página visual del flujo: se proyecta aparte.
 
-**Fase 2 — Redacción** (solo si SÓLIDO): narrativa → secciones del formulario del fondo → plan de escalamiento → impacto → QA de coherencia → **entrega a F19**.
+---
 
-**Tiempo:** ~1 mes, en paralelo a la formulación técnica de F19.
+## 3. Pregunta por pregunta — Crea y Valida (35 min)
 
-## 3. Qué se levanta en cada instancia (10 min)
+Para cada una: **qué pide el formulario · cómo la aborda el piloto · en qué reunión se levanta el insumo.** La última fila la llenamos en la reunión.
 
-### Reunión #1 — con el cliente (≈45 min)
-- La empresa (razón social, tamaño, antigüedad, contacto).
-- **Solución / Producto:** qué es el proyecto de innovación y en qué estado está.
-- **Cliente objetivo (grueso):** a quién le vende hoy, cuántos clientes, ventas actuales.
-- **Problema:** qué le duele al cliente y qué hace hoy para resolverlo.
-- **Propuesta de valor (primer borrador):** "ayudo a [X] a lograr [Y] haciendo [Z]".
-- Resultado de negocio buscado; presupuesto; historia previa.
-- Cierre: se le manda al cliente la **tarea de datos** (precios, costos fijos y variables, BOM si aplica, pipeline de clientes, estados financieros).
+### 3.1 · Problema / Diagnóstico — 10%
 
-### Búsqueda de mercado — sin cliente, el equipo con navegador
-- **Tamaño de mercado:** TAM / SAM / SOM, con método (bottom-up para Chile) y fuentes.
-- **Competidores y sustitutos:** qué ofrecen, a qué precio, fortalezas y debilidades.
-- **Curva de valor:** contra qué se compite; precios de referencia; benchmarks de industria (márgenes típicos, ciclo de venta).
-- Tendencias y regulación que mueven el mercado.
-- → Cada cifra se verifica una por una (año y geografía) con un QA independiente.
+| | |
+|---|---|
+| **Qué pide** | El problema/oportunidad, sus causas (técnicas, de mercado, regulatorias) y efectos en la industria; la **dimensión en cifras** (%, montos, frecuencias); fuentes; por qué es relevante ahora. |
+| **Cómo lo aborda el piloto** | El problema en palabras del cliente → `perfil_comercial`. La **magnitud con cifras verificadas y fuentes** → `investigacion_mercado`. Se redacta en la sección `diagnostico` del formulario y en la narrativa. |
+| **Se levanta en** | **R#1** (el problema, a quién le duele, qué le cuesta hoy — estimación del cliente) · **Búsqueda de mercado** (la cifra de magnitud, con dato de industria / gremio / prensa). |
+| **Sugerencia de la jefa** | |
 
-### Reunión #2 — con el cliente (≈60 min)
-- **Segmentos:** prioriza el segmento objetivo de hoy.
-- **Propuesta de valor por segmento;** contra qué compite realmente ("no hacer nada" suele ser el rival).
-- **Canales y relación con clientes:** cómo llega y cómo entrega la propuesta de valor.
-- **Fuentes de ingreso + pricing:** qué cobra, cómo (único / recurrente), a qué precio y **cómo lo fija** (comparación con el mercado / margen sobre costo / valor capturable).
-- **Estructura de costos:** fijos y variables; ¿economía de escala o de alcance?
-- **Recursos, actividades y asociaciones clave.**
-- **Prueba y aprendizaje:** qué se valida en la primera fase.
-- **Indicadores de tracción:** cómo el cliente medirá el éxito.
-- Capacidad de ejecución: quién decide, qué le falta a la empresa.
-- Lista de supuestos, cada uno marcado confirmado / por confirmar.
+### 3.2 · Mercado objetivo — 10%
 
-## 4. Los supuestos que levantamos con el cliente — **VALIDAR** (15 min)
+| | |
+|---|---|
+| **Qué pide** | El mercado/segmento al que apunta la solución; su tamaño (Chile y/o exportación); crecimiento; clientes potenciales concretos. |
+| **Cómo lo aborda el piloto** | Tamaño (TAM/SAM/SOM, método **bottom-up** con datos INE/SII, fuentes) → `investigacion_mercado`. El **segmento prioritario** y el nº de clientes que el cliente conoce / su pipeline → `supuestos_modelo.segmentos`. Se redacta en `mercado_objetivo` y en la narrativa. |
+| **Se levanta en** | **Búsqueda de mercado** (tamaño y crecimiento) · **R#2** (el cliente prioriza el segmento y aporta clientes potenciales / pipeline). |
+| **Sugerencia de la jefa** | |
 
-En un proyecto de innovación, buena parte del modelo son **supuestos** (el producto todavía no se vende, o se vende poco). Los levantamos, los marcamos "por confirmar" y los listamos aparte en la postulación — no se esconden.
+### 3.3 · Solución — Grado de novedad y diferenciación — 10%
 
-| Bloque del lienzo | Qué le pedimos al cliente | Suele ser | Reunión |
-|---|---|---|---|
-| **Segmento objetivo** | Cuál es el segmento prioritario hoy; cuántos clientes potenciales hay; quién decide la compra | dato + supuesto | R#1 → R#2 |
-| **Problema** | Cuánto le cuesta hoy el problema (pérdida / costo / frecuencia); qué hace hoy para resolverlo | supuesto / estimación | R#1 |
-| **Propuesta de valor** | Qué mejora concreta entrega (cuánto ahorra / cuánto mejora) | supuesto hasta que haya pilotos | R#1 → R#2 |
-| **Canales** | Cómo va a llegar al cliente; cuánto tarda en cerrar una venta (ciclo) | supuesto | R#2 |
-| **Pricing** | Qué cobra, cómo (único / recurrente), a qué precio y cómo lo fijó | supuesto si no validó con clientes | R#2 |
-| **Retención** (si es recurrente) | Cuánto tiempo dura un cliente pagando | supuesto | R#2 |
-| **Costo variable** | Costo de producir una unidad (BOM, insumos, horas) | dato o estimación | R#2 + tarea de datos |
-| **Costos fijos** | Equipo, arriendo, licencias mensuales | dato | R#2 + tarea de datos |
-| **Costo de adquirir un cliente** | Gasto comercial ÷ clientes conseguidos | supuesto | R#2 |
-| **Recursos / actividades / asociaciones clave** | Qué necesita sí o sí y no tiene (capital, equipo, permisos, un socio) | dato | R#2 |
-| **Proyección** | Cuántas unidades / clientes el año 1; a qué ritmo crece (%/año); hasta dónde quiere llegar y cuándo | supuesto | R#2 → construcción |
-| **Impacto** | Ventas incrementales, empleos, impacto ambiental esperados | derivado + validación | construcción |
-| **Indicadores de tracción** | Cómo va a medir que le va bien | dato | R#2 |
+| | |
+|---|---|
+| **Qué pide** | Qué hace novedosa a la solución vs. lo existente (nacional e internacional); comparación explícita con competidores; por qué las mejoras son sustanciales. |
+| **Cómo lo aborda el piloto** | La **diferenciación de mercado**: `investigacion_mercado.competidores` (qué ofrecen, a qué precio, fortalezas/debilidades) + `narrativa.diferenciacion` (contra qué compite y por qué es mejor para el cliente). **La novedad técnica y la propiedad intelectual las aporta GT.** |
+| **Se levanta en** | **Búsqueda de mercado** (competidores y sustitutos) · **R#2** (la visión del cliente de contra qué compite — a veces "no hacer nada" o una planilla). |
+| **Sugerencia de la jefa** | |
 
-**Pregunta para ti:** ¿esta lista cubre lo necesario para armar un modelo de negocio **postulable**? ¿Falta algo? ¿Pedimos algo que en la práctica el cliente nunca tiene?
+### 3.4 · Introducción al mercado — Impacto — 10%
 
-## 5. Definiciones a cerrar (15 min)
+| | |
+|---|---|
+| **Qué pide** | Impacto esperado: ventas/ingresos incrementales (3–5 años), ahorro de costos, empleos creados, impacto social/ambiental. |
+| **Cómo lo aborda el piloto** | `modelo_negocio.proyeccion` (ventas por escenario, calculada por el motor) + `impacto_continuidad.impacto_esperado` (empleos, ambiental). Se redacta en `impacto`. |
+| **Se levanta en** | **R#2** (supuestos de crecimiento y de empleo del cliente) · **construcción del modelo** (el motor arma la proyección) · el cliente **valida los números** antes de cerrar. |
+| **Sugerencia de la jefa** | |
 
-| # | Definición | Opciones | Mi recomendación |
-|---|---|---|---|
-| 1 | **Estrategia de pricing por defecto** | comparación con el mercado · margen sobre costo · valor capturable | empezar por **comparación con el mercado** y contrastar con valor capturable |
-| 2 | **Qué hace un modelo NO postulable** (compuerta INVIABLE) | (a) el lienzo está incompleto o incoherente (segmento sin propuesta de valor que le calce, sin forma de cobrar definida) · (b) cada venta pierde plata (margen de contribución < 0) y no hay palanca · (c) el punto de equilibrio no cabe en el mercado alcanzable (SOM) | los 3, con **(b) y (c) como criterio duro** |
-| 3 | **LTV / CAC / payback** | siempre · solo si es recurrente / suscripción · nunca | **solo recurrentes**; para el resto, margen de contribución + punto de equilibrio bastan |
-| 4 | **Indicadores de tracción a pedir** | nº de clientes · ventas / contratos · % de cumplimiento de hitos · cartas de interés · renovaciones | los 5 en la lista; el cliente compromete **2–3** |
-| 5 | **Dimensionamiento de mercado** | bottom-up (nº de empresas / personas del segmento × ticket, datos INE / SII) · top-down (% de un informe global) | **bottom-up como principal**, top-down para contrastar |
-| — | Horizonte de proyección | 3 o 5 años | 5, ajustable por fondo |
+### 3.5 · Introducción al mercado — Escalabilidad — 10%
 
-> Glosario rápido: **margen de contribución** = precio − costo variable de esa unidad (lo que queda para pagar los costos fijos). **Punto de equilibrio** = cuántas unidades hay que vender para que ingresos = costos totales. **CAC** = gasto comercial ÷ clientes conseguidos. **LTV** = plata total que deja un cliente en toda su relación. **LTV/CAC** = cuántas veces recuperas lo que costó traer al cliente.
+| | |
+|---|---|
+| **Qué pide** | Potencial de escalamiento (más clientes, nuevos segmentos, exportación); estrategia de comercialización; inversión requerida para escalar. |
+| **Cómo lo aborda el piloto** | `plan_escalamiento`: hitos comerciales con meta y fecha, metas de tracción, y la estrategia (nuevos segmentos / geografías / canales) **anclada al SAM/SOM** y a la proyección. |
+| **Se levanta en** | **R#2** (canales, plan de expansión del cliente, hasta dónde quiere llegar y cuándo). |
+| **Sugerencia de la jefa** | |
 
-## 6. Cosas que ya están claras (confirmar, no discutir)
+### 3.6 · Fase 1 — Perfil de Proyecto
 
-- **Guía de redacción de fondos:** es **F19** — ahí se formula contra las bases. El piloto entrega el borrador de las secciones de modelo de negocio; F19 lo integra.
-- **Bases de los fondos:** estables gobierno a gobierno; entre convocatorias pueden cambiar focos o alguna pregunta, pero es poco probable; pueden salir convocatorias nuevas. → No hace falta cargar el texto literal de cada convocatoria en el piloto; **basta la estructura + los criterios de evaluación** (que ya están en `motor-reglas/formularios.json`).
-- **Caso real de prueba:** el modelo de negocio de la **postulación a Crea y Valida que se rechazó**. Sirve para revisar cómo queda con el flujo nuevo.
+Es una **versión condensada** de 3.1–3.5 (problema · mercado · propuesta de valor · escalabilidad), previa y obligatoria, con retroalimentación no vinculante del Subcomité (~14 días hábiles). Mismo insumo, redacción corta.
 
-**Preguntas para ti:**
-- ¿Hay hoy un **ingeniero comercial** en el equipo que pueda dar una pasada de 30 min a las definiciones 1–5?
-- ¿Corremos el caso rechazado por el flujo y lo revisamos juntas, o lo dejo listo y lo comentamos?
-- ¿En qué **formato** le sirve a F19 el borrador del piloto (un documento, campos estructurados, una planilla)?
+### 3.7 · Lo que queda fuera del piloto (para saber el límite)
 
-## 7. Próximos pasos
+| Sección (%) | Quién |
+|---|---|
+| Solución — Metodología (plan de trabajo técnico, hitos, presupuesto, dedicación) — 20% | GT / F19 |
+| Solución — Actividades de I+D (GID ≥ 30%) — 10% | GT / F19 |
+| Capacidades (equipo, asociados, infraestructura) — 20% | GT / F19 |
 
-1. Ajustar el piloto según las definiciones de la sección 5.
-2. Correr el caso real (Crea y Valida rechazado) de punta a punta.
-3. Revisarlo con el ingeniero comercial, si lo hay.
-4. Decidir cuándo se propone a F19.
+**El piloto cubre ~45–50% del puntaje del formulario de Crea y Valida.**
+
+---
+
+## 4. Dónde difieren los otros 3 fondos (10 min)
+
+| Fondo | Diferencia respecto de Crea y Valida | Impacto en el flujo |
+|---|---|---|
+| **Innova Alta Tecnología** | Agrega **"Estrategia de continuidad"** (15%): captura de valor y **financiamiento post-subsidio** → `impacto_continuidad.estrategia_continuidad`. "Beneficios esperados" ≈ impacto. El diagnóstico pide además inteligencia tecnológica y PI (→ GT). | +1 pregunta en R#2 (cómo se sostiene el negocio sin el subsidio). |
+| **Consolida y Expande** | La **Etapa 2 es un Plan de Negocios completo**: estrategia de negocio (40%) + escalabilidad (30%). El piloto aporta casi todo: Canvas + pricing + proyección + plan de expansión. **Es el fondo donde más pesa el modelo de negocio (~60–70%).** | R#2 se alarga o se parte en dos → **3 reuniones** para este fondo. |
+| **Capital Humano** | Solo **"Caracterización del desafío"** (encuadre de mercado del problema) y **"Resultados e indicadores"**. El resto es sobre la persona a contratar. | Aporte mínimo del piloto; probablemente **1 reunión** basta. |
+
+---
+
+## 5. Acuerdos y preguntas (10 min)
+
+- **2 reuniones** para levantar el modelo de negocio: **decidido**. Excepción a validar: 3 para Consolida y Expande, 1 para Capital Humano.
+- **Caso real de prueba:** el modelo de negocio de la postulación a **Crea y Valida que se rechazó**. ¿Lo corremos por el flujo y lo revisamos juntas, o lo dejo listo y lo comentamos?
+- **Ingeniero comercial:** ¿hay hoy alguien en el equipo que pueda revisar cómo queda el modelo de negocio de ese caso?
+- **Formato de entrega a F19:** ¿en qué formato le sirve el borrador del piloto — un documento, campos estructurados, una planilla?
+- **Guía de redacción fina por sección:** confirmado que es F19 (ahí se formula contra las bases). El piloto entrega el borrador; F19 lo integra.
+
+### Salida esperada
+- La fila "Sugerencia de la jefa" llena para las 5 preguntas de Crea y Valida.
+- Con eso: qué se mueve de R#2 a R#1 (o viceversa), y si Consolida y Expande necesita 3 reuniones.
+- Caso real acordado y quién lo revisa.
+
+---
+
+## Apéndice — Definiciones abiertas (solo si sobra tiempo)
+
+No son el foco de la reunión, pero pueden salir:
+- **Estrategia de pricing por defecto:** comparación con el mercado / margen sobre costo / valor capturable. (Recomiendo: partir por comparación con el mercado.)
+- **Qué hace un modelo "no postulable":** lienzo incoherente · cada venta pierde plata sin palanca · el punto de equilibrio no cabe en el mercado alcanzable.
+- **LTV / CAC / payback:** solo para modelos recurrentes / suscripción; para el resto, margen de contribución + punto de equilibrio bastan.
+- **Horizonte de proyección:** 3 o 5 años.

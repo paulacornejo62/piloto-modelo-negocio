@@ -107,7 +107,15 @@ Un **lienzo que se llena en 2 reuniones + la investigación de mercado**. Cada b
 
 ---
 
-## PARTE 3 — Reunión con la jefa (martes): presentar el flujo y validar reglas
+## PARTE 3 — Reunión con la jefa
+
+> **Cambio de estrategia (2026-09-02):** en vez de "presentar el flujo + validar umbrales
+> abstractos", se recorre **cada pregunta del formulario que toca el modelo de negocio** y se
+> muestra cómo la aborda el piloto, para que la jefa dé sugerencias **por pregunta** y con eso
+> se ajuste R#1 / R#2. El guion está en **`REUNION-JEFA-validacion.md`**. Lo de abajo queda
+> como material de respaldo.
+
+### (Respaldo) presentar el flujo y validar reglas
 
 **Objetivo:** que entienda el flujo de captura estilo Canvas, vea qué se levanta en cada reunión, y **valide las decisiones** — en lenguaje que ambas manejan.
 
