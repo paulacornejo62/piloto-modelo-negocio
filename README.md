@@ -68,20 +68,39 @@ Propuesta a validar con la jefa: dejarlas **opcionales** (solo modelos recurrent
 el motor en (a) completitud/coherencia del lienzo Canvas, (b) tamaño de mercado, (c) margen de
 contribución > 0 y punto de equilibrio ≤ SOM, (d) proyección de ventas.
 
+### Sesión 2026-10-01 — primer caso real (AQP) + referencia ganado vs. rechazado
+
+**Para qué es el piloto (meta 2026 de Paula, hoja OI GT):** *"Desarrollar, documentar e
+implementar una metodología estandarizada para la elaboración de los apartados de Modelo de
+Negocio en las postulaciones a subsidios CORFO"*. Nota 5 = metodología documentada e
+implementada y **usada en ≥3 postulaciones** (4 = ≥2 · 3 = ≥1 · 2 = documentada sin uso).
+**Período: hasta diciembre 2026.** El entregable final es un **procedimiento escrito**; la
+herramienta es su implementación con IA (también aporta a la meta de KB + prompts estándar).
+
+| Bloque | Commit | Qué cambió |
+|---|---|---|
+| Caso `proyectos/aqp/` | — (gitignoreado) | **Postulación n.º 1**: AQP, Crea y Valida 2026 (postula ~dic-2026), sobre el proyecto Ley I+D bi-modal contra Caligus. Buzón cargado: notas de la coordinación del 25-09, formulario Ley I+D, síntesis del proyecto, datos comerciales conocidos (todo `[POR CONFIRMAR]`) y `preguntas-reunion-2.md`. Drive vinculado. |
+| `REFERENCIA-CyV-ganado-vs-rechazado.md` | `616a7d2` | Qué evalúa CORFO por indicador (carta del rechazado, nota 3,20) vs. cómo respondió el ganado → **preguntas A1–A10**, que afinan las S5–S10 de `REUNION-JEFA-validacion.md` (no las reemplazan). |
+
+Decisiones: no se rehace el formulario — el documento "Sugerencias V2" del compañero queda
+como suyo. La metodología = banco de preguntas (S1–S10 + A1–A10) + guía por pregunta.
+
 ### Pendiente
-1. **Decidido:** el modelo de negocio se levanta en **2 reuniones** con el cliente (+ 1
-   búsqueda de mercado). Excepción a validar: 3 para Consolida y Expande, 1 para Capital Humano.
-2. **Reunión con el líder** (flujo general): dónde se inserta el modelo de negocio en el mes
-   de postulación al subsidio.
-3. **Reunión con la jefa**: recorrer las 5 preguntas del formulario de Crea y Valida que toca
-   el piloto y recoger sus sugerencias por pregunta → ajustar qué se cubre en R#1 vs R#2
-   (`REUNION-JEFA-validacion.md` §3). Confirmar caso real (Crea y Valida rechazado),
-   ingeniero comercial y formato de entrega a F19.
-4. **Aplicar al piloto** los cambios que salgan de las reuniones (ver `NOTAS-preparacion-reuniones.md`
-   Parte 4: `parametros.json`, `compuerta_viabilidad`, `estrategia_pricing` en el schema,
-   vocabulario Canvas en los `SKILL.md`).
-5. **Prueba con un caso real** end-to-end — el modelo de negocio de la postulación a Crea y
-   Valida que se rechazó.
-6. Guía de redacción fina por sección CORFO: la aporta F19 (donde se formula contra las bases).
+1. **Levantar A1–A10 con AQP** en la Reunión #2 y anotar cuáles sirvieron, cuáles sobran y
+   qué faltó. Esperar lo comprometido por AQP: informe financiero (Hugo), feedback de clientes
+   (David), presentación del modelo de negocio (Cristian/Rodrigo) y presentación técnica (Claudio).
+2. **Correr el flujo con AQP** (`orquesta aqp`) cuando lleguen los datos. Verificar una por una
+   las cifras heredadas de la Ley I+D antes de usarlas.
+3. **Procedimiento escrito v0** (después de AQP): objetivo y alcance · etapas · banco de
+   preguntas integrado (S + A) · guía por pregunta del formulario con indicadores CORFO y
+   errores a evitar · checklist de calidad · **registro de uso** (evidencia del KPI).
+4. **Postulaciones n.º 2 y 3** antes de dic-2026 — probablemente otros fondos además de
+   Crea y Valida (por eso el procedimiento se apoya en la columna vertebral de `MAPEO-formularios.md`).
+5. Aplicar al piloto los ajustes validados (A1–A10 en `mn-eval-reunion-1/2` y el schema,
+   bloque `traccion_actual`, cambios de `NOTAS-preparacion-reuniones.md` Parte 4).
+6. Sin fecha: reunión con el líder (dónde se inserta el modelo de negocio en el mes de
+   postulación) y con la jefa (validar S1–S10). Excepciones al n.º de reuniones: 3 para
+   Consolida y Expande, 1 para Capital Humano.
+7. Guía de redacción fina por sección CORFO: la aporta F19.
 
 Cómo correrlo: **[COMO-CORRER.md](COMO-CORRER.md)**.
