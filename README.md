@@ -81,15 +81,27 @@ herramienta es su implementación con IA (también aporta a la meta de KB + prom
 |---|---|---|
 | Caso `proyectos/aqp/` | — (gitignoreado) | **Postulación n.º 1**: AQP, Crea y Valida 2026 (postula ~dic-2026), sobre el proyecto Ley I+D bi-modal contra Caligus. Buzón cargado: notas de la coordinación del 25-09, formulario Ley I+D, síntesis del proyecto, datos comerciales conocidos (todo `[POR CONFIRMAR]`) y `preguntas-reunion-2.md`. Drive vinculado. |
 | `REFERENCIA-CyV-ganado-vs-rechazado.md` | `616a7d2` | Qué evalúa CORFO por indicador (carta del rechazado, nota 3,20) vs. cómo respondió el ganado → **preguntas A1–A10**, que afinan las S5–S10 de `REUNION-JEFA-validacion.md` (no las reemplazan). |
-| `BITACORA-metodologia.md` | *(este)* | **Registro de uso** (evidencia del KPI) + aprendizajes por caso. Caso 1 = AQP: resultado de la R#2 (02-10) por bloque Canvas y 6 aprendizajes para el procedimiento. |
+| `BITACORA-metodologia.md` | `7af9d71` | **Registro de uso** (evidencia del KPI) + aprendizajes por caso. Caso 1 = AQP: resultado de la R#2 (02-10) por bloque Canvas y 6 aprendizajes para el procedimiento. |
 
 Decisiones: no se rehace el formulario — el documento "Sugerencias V2" del compañero queda
 como suyo. La metodología = banco de preguntas (S1–S10 + A1–A10) + guía por pregunta.
 
+### Sesión 2026-10-02 — Reunión #2 con AQP + preparación de la #3
+
+| Bloque | Dónde | Qué cambió |
+|---|---|---|
+| Banco de preguntas por Canvas | `proyectos/aqp/entradas/preguntas-reunion-2.md` | A1–A10 + N1–N3 (relación con clientes, recursos, competencia) ordenadas por los 9 bloques del Canvas + franja CORFO (impacto, permisos, continuidad). |
+| Reunión #2 (02-10) | `entradas/reunion-2.md`, `presentacion-modelo-negocio-aqp.md`, `datos-comerciales.md` | AQP trajo su propia presentación del modelo. Datos nuevos por bloque Canvas (todo dato del cliente, sin respaldo aún). Convocatoria CyV: **10-11-2026 → 28-01-2027**. |
+| Resultado de la prueba | `BITACORA-metodologia.md` | Bien cubiertos: segmentos, relación, recursos, actividades. Lo cualitativo sí, los números no: propuesta, canales, ingresos, socios, costos. Sin tocar: **franja CORFO**. 6 aprendizajes (el Canvas no trae números; reservar tiempo a la franja CORFO; confirmar cifras por escrito; etc.). |
+| Lienzo Canvas (artifact) | https://claude.ai/artifact/G1yqbKgCuEFMa1Z8qHkzKy | Página proyectable: por bloque, lo que ya sabemos + lo que falta + notas en vivo. Actualizada para la R#3. |
+| Presentación R#3 | Drive `AQP/2026/2.- Crea y Valida - Noviembre 2026/` | "Crea y Valida AQP - Reunión 3 (08-10-2026).pptx", 10 láminas: lo levantado, lo que falta, cifras a confirmar, pedido de proyecciones de Aquaprime 1.0, pedido de avances técnicos, cruce Ley I+D → CyV, plan de formulación por jueves. |
+
 ### Pendiente
-1. **Levantar A1–A10 con AQP** en la Reunión #2 y anotar cuáles sirvieron, cuáles sobran y
-   qué faltó. Esperar lo comprometido por AQP: informe financiero (Hugo), feedback de clientes
-   (David), presentación del modelo de negocio (Cristian/Rodrigo) y presentación técnica (Claudio).
+1. **Reunión #3 (08-10, 15:00)** con la presentación y el lienzo. Cerrar la franja CORFO,
+   la carta de interés (Cermaq/GMT) y el canal del oral. Pedir **proyecciones de Aquaprime 1.0**
+   y la **presentación técnica** para el 15-10. Después, enviar el resumen de cifras para que
+   AQP lo confirme por escrito.
+   Plan: 15-10 técnica · 22-10 números · 29-10 relato + estructura · desde el 10-11 redacción.
 2. **Correr el flujo con AQP** (`orquesta aqp`) cuando lleguen los datos. Verificar una por una
    las cifras heredadas de la Ley I+D antes de usarlas.
 3. **Procedimiento escrito v0** (después de AQP): objetivo y alcance · etapas · banco de
