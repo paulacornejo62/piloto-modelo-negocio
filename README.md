@@ -81,6 +81,7 @@ herramienta es su implementación con IA (también aporta a la meta de KB + prom
 |---|---|---|
 | Caso `proyectos/aqp/` | — (gitignoreado) | **Postulación n.º 1**: AQP, Crea y Valida 2026 (postula ~dic-2026), sobre el proyecto Ley I+D bi-modal contra Caligus. Buzón cargado: notas de la coordinación del 25-09, formulario Ley I+D, síntesis del proyecto, datos comerciales conocidos (todo `[POR CONFIRMAR]`) y `preguntas-reunion-2.md`. Drive vinculado. |
 | `REFERENCIA-CyV-ganado-vs-rechazado.md` | `616a7d2` | Qué evalúa CORFO por indicador (carta del rechazado, nota 3,20) vs. cómo respondió el ganado → **preguntas A1–A10**, que afinan las S5–S10 de `REUNION-JEFA-validacion.md` (no las reemplazan). |
+| `BITACORA-metodologia.md` | *(este)* | **Registro de uso** (evidencia del KPI) + aprendizajes por caso. Caso 1 = AQP: resultado de la R#2 (02-10) por bloque Canvas y 6 aprendizajes para el procedimiento. |
 
 Decisiones: no se rehace el formulario — el documento "Sugerencias V2" del compañero queda
 como suyo. La metodología = banco de preguntas (S1–S10 + A1–A10) + guía por pregunta.
