@@ -52,6 +52,13 @@ proyectar el lienzo. Cobertura del banco de preguntas:
    (rotación de productos). Sostiene la propuesta de valor y la continuidad. Es específica del
    rubro sanitario; evaluar si se generaliza como "¿qué hace que tu solución siga funcionando en el tiempo?".
 
+7. **Separar el modelo actual del proyectado** (revisión de Paula, 05-10). R#1 y R#2 levantan
+   el **modelo actual** (el producto que ya vende), que es la línea base. La construcción define
+   el **modelo proyectado** bloque por bloque: qué se mantiene y qué cambia con el producto del
+   proyecto. Si se mezclan, los datos del producto nuevo parecen hechos cuando son hipótesis.
+   En AQP, el baño nuevo mantiene casi todo el modelo y el oral cambia canal, relación,
+   ingresos, socios y costos.
+
 ### Pendiente para la R#3 (08-10-2026)
 A2 carta de interés de los prospectos · A7 beneficio con cifra · A8 permisos · A9 continuidad ·
 confirmar precios por escrito · canal del producto nuevo · competidores.
