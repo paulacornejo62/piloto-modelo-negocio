@@ -96,12 +96,23 @@ como suyo. La metodología = banco de preguntas (S1–S10 + A1–A10) + guía po
 | Lienzo Canvas (artifact) | https://claude.ai/artifact/G1yqbKgCuEFMa1Z8qHkzKy | Página proyectable: por bloque, lo que ya sabemos + lo que falta + notas en vivo. Actualizada para la R#3. |
 | Presentación R#3 | Drive `AQP/2026/2.- Crea y Valida - Noviembre 2026/` | "Crea y Valida AQP - Reunión 3 (08-10-2026).pptx", 10 láminas: lo levantado, lo que falta, cifras a confirmar, pedido de proyecciones de Aquaprime 1.0, pedido de avances técnicos, cruce Ley I+D → CyV, plan de formulación por jueves. |
 
+### Sesión 2026-10-05 — revisión de Paula + nuevas fuentes del cliente
+
+| Bloque | Dónde | Qué cambió |
+|---|---|---|
+| Presentación R#3 (editada por Paula: portada, índice, separadores, logo Brinca) | Drive `AQP/2026/2.- Crea y Valida - Noviembre 2026/` | 18 láminas. Canvas "modelo actual Aquaprime 1.0" (solo producto actual + 2 tipos de compra + capacidad de asistencia). Nueva lámina **propuesta de valor del producto** (atributos con fuente). Tabla **actual → proyectado por los 9 bloques** (baño nuevo vs. oral). Preguntas en 2 columnas (actual / proyectado). Cifras a confirmar ampliadas. **Plan de trabajo por semanas** (S1 = 05-10, apertura S6 = 10-11, perfil S5–S7, formulación S9–S12). Dudas en **rojo**. |
+| Lienzo Canvas (artifact) | https://claude.ai/artifact/G1yqbKgCuEFMa1Z8qHkzKy | Cada bloque: hoy (Aquaprime 1.0) · proyectado (baño nuevo + oral) · lo que falta. |
+| Nuevas entradas del caso | `entradas/presentacion-aquaprime-antigua.md`, `postulacion-anid-startup-ciencia.md`, `datos-comerciales.md` | Atributos del producto, kit de campo (TRL 3), competidores con nombre, datos de mercado con fuente, **patente PCT WO 2025/107092 A1 verificada: titular Aquacon SpA, no AQP**. Capacidad: 2–3 asistencias por técnico al mes, mejor mes ≈10. |
+| Bitácora | `BITACORA-metodologia.md` | Aprendizajes 7–11: separar modelo actual/proyectado, pedir postulaciones previas, revisar titularidad de PI, capacidad operativa = techo, herramientas del curso CORFO Conecta. |
+
 ### Pendiente
 1. **Reunión #3 (08-10, 15:00)** con la presentación y el lienzo. Cerrar la franja CORFO,
    la carta de interés (Cermaq/GMT) y el canal del oral. Pedir **proyecciones de Aquaprime 1.0**
    y la **presentación técnica** para el 15-10. Después, enviar el resumen de cifras para que
    AQP lo confirme por escrito.
-   Plan: 15-10 técnica · 22-10 números · 29-10 relato + estructura · desde el 10-11 redacción.
+   Plan por semanas en la lámina 16 de la presentación: perfil de proyecto en S5–S7 (desde el 10-11), formulación en S9–S12.
+   Pedir además: licencia de la patente (Aquacon) y fase nacional, informes de ensayo, gráfico ventas vs. baños, carta de evaluación ANID.
+   Confirmar en las bases técnicas CyV 2026 (Res. 388) las fechas del perfil.
 2. **Correr el flujo con AQP** (`orquesta aqp`) cuando lleguen los datos. Verificar una por una
    las cifras heredadas de la Ley I+D antes de usarlas.
 3. **Procedimiento escrito v0** (después de AQP): objetivo y alcance · etapas · banco de

@@ -62,3 +62,23 @@ proyectar el lienzo. Cobertura del banco de preguntas:
 ### Pendiente para la R#3 (08-10-2026)
 A2 carta de interés de los prospectos · A7 beneficio con cifra · A8 permisos · A9 continuidad ·
 confirmar precios por escrito · canal del producto nuevo · competidores.
+
+## Caso 1 — preparación R#3 (2026-10-05): nuevas fuentes del cliente
+
+Fuentes que se sumaron al caso: presentación comercial antigua de Aquaprime, postulación fallida
+a ANID Startup Ciencia (con kit de campo) y las notas de Paula del curso CORFO Conecta (clases 1–3).
+
+### Aprendizajes para el procedimiento
+8. **Pedir al cliente sus postulaciones anteriores y sus presentaciones comerciales, a otros fondos
+   también**, en R#1. En AQP trajeron datos de mercado con fuente, competidores con nombre,
+   atributos cuantificados y la propiedad intelectual. Ahorran la mitad de la búsqueda de mercado.
+   **Verificar igual**: la patente resultó estar a nombre de otra empresa (titular ≠ postulante).
+9. **Revisar la titularidad de la propiedad intelectual temprano**: quién es el titular, si hay
+   licencia y en qué fase está la patente (los plazos de fase nacional vencen). Afecta la sección
+   de apropiabilidad y la elegibilidad del relato.
+10. **La capacidad operativa del modelo actual define el techo de crecimiento** (aquí, asistencias
+    por técnico al mes). Preguntarla siempre en R#2: sostiene la sección de escalamiento.
+11. **Curso CORFO Conecta → herramientas para el formulario**: framework Go-to-Market (8 bloques;
+    "prueba y aprendizaje" → hitos, "indicadores de tracción" → resultados con indicador), curva
+    de valor (→ atributos diferenciadores cuantificados), one-liner (→ resumen), 3 formas de fijar
+    precio (mercado / margen / valor). Incorporarlas al procedimiento v0.
