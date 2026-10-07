@@ -105,6 +105,20 @@ como suyo. La metodología = banco de preguntas (S1–S10 + A1–A10) + guía po
 | Nuevas entradas del caso | `entradas/presentacion-aquaprime-antigua.md`, `postulacion-anid-startup-ciencia.md`, `datos-comerciales.md` | Atributos del producto, kit de campo (TRL 3), competidores con nombre, datos de mercado con fuente, **patente PCT WO 2025/107092 A1 verificada: titular Aquacon SpA, no AQP**. Capacidad: 2–3 asistencias por técnico al mes, mejor mes ≈10. |
 | Bitácora | `BITACORA-metodologia.md` | Aprendizajes 7–11: separar modelo actual/proyectado, pedir postulaciones previas, revisar titularidad de PI, capacidad operativa = techo, herramientas del curso CORFO Conecta. |
 
+### División de trabajo AQP: piloto ↔ F19 (decidido 2026-10-07)
+
+- **F19** escribe el **formulario completo** (perfil y Crea y Valida): problema, solución, hipótesis,
+  hitos, I+D, propiedad intelectual, equipo, presupuesto, y el **cruce técnico** con la Ley I+D
+  (Gantt, avances a la fecha, proyección a marzo de 2027).
+- **Este piloto** redacta las **secciones de modelo de negocio**: mercado objetivo (en lo comercial),
+  modelo de ingresos, cuantificación, impacto, barreras, continuidad (4.1–4.6). Las entrega a F19 como
+  borrador, y F19 lo integra y revisa la coherencia con el resto (hitos comerciales ↔ plan de trabajo,
+  actividades comerciales fuera del % de I+D).
+- **Una sola fuente para los datos comerciales de AQP:** `proyectos/aqp/entradas/`. F19 apunta a esos
+  archivos, no los copia. Toda cifra comercial se corrige primero aquí y después se traspasa.
+- **Conversaciones separadas**, cada una lanzada desde su carpeta. AQP es el primer caso real del
+  traspaso piloto → F19 (pendiente abierto: formato de entrega).
+
 ### Pendiente
 1. **Reunión #3 (08-10, 15:00)** con la presentación y el lienzo. Cerrar la franja CORFO,
    la carta de interés (Cermaq/GMT) y el canal del oral. Pedir **proyecciones de Aquaprime 1.0**
