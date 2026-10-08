@@ -10,7 +10,7 @@ Sin datos confidenciales: el detalle de cada caso está en su carpeta `proyectos
 
 | # | Caso | Fondo | Inicio | Etapas aplicadas | Estado |
 |---|---|---|---|---|---|
-| 1 | `aqp` | Crea y Valida 2026 (cierre 28-01-2027) | 2026-09-25 | R#1 (25-09) · R#2 con lienzo Canvas + A1–A10/N1–N3 (02-10) | En curso: datos financieros pendientes del cliente |
+| 1 | `aqp` | Crea y Valida 2026 (cierre 28-01-2027) | 2026-09-25 | R#1 (25-09) · R#2 con lienzo Canvas + A1–A10/N1–N3 (02-10) · R#3 con deck de lo levantado/faltante (08-10) | En curso: proyecciones de Hugo y avance técnico para R#4 (15-10) |
 | 2 | por definir | | | | |
 | 3 | por definir | | | | |
 
@@ -82,3 +82,21 @@ a ANID Startup Ciencia (con kit de campo) y las notas de Paula del curso CORFO C
     "prueba y aprendizaje" → hitos, "indicadores de tracción" → resultados con indicador), curva
     de valor (→ atributos diferenciadores cuantificados), one-liner (→ resumen), 3 formas de fijar
     precio (mercado / margen / valor). Incorporarlas al procedimiento v0.
+
+## Caso 1 — R#3 (2026-10-08): deck de "levantado vs. faltante"
+
+Se presentó un deck con el Canvas actual, el proyectado, las preguntas pendientes, las cifras a
+confirmar y el plan. Se cerraron los permisos, la competencia con nombre, las cartas de interés,
+el costo total del baño para el cliente y la mortalidad. La **franja CORFO sí se cubrió**
+(permisos, PI, seguridad).
+
+### Aprendizajes para el procedimiento
+12. **Llevar a la reunión una lámina de "cifras a confirmar"** hace que el cliente las corrija en
+    vivo. Aun así, **Gemini volvió a transcribir mal el precio** ("950 pesos" por US$2.950), y lo
+    corrigió la consultora. El paso de confirmar por escrito sigue siendo necesario. Revisar las
+    notas automáticas antes de usarlas.
+13. **Preguntar el costo total para el cliente, no solo el precio** (producto + servicios de
+    terceros). En AQP, el baño cuesta ≈US$4.000 por jaula, y ≈1/4 son maniobras externas. Es la
+    base para cuantificar el beneficio del oral, que no necesita maniobras.
+14. **Pedir los datos financieros con una tabla** (año × indicador), real + estimado + proyectado,
+    adjunta al correo y en un doc editable. Es más fácil de llenar que un pedido en prosa.
