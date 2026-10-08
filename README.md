@@ -119,14 +119,25 @@ como suyo. La metodología = banco de preguntas (S1–S10 + A1–A10) + guía po
 - **Conversaciones separadas**, cada una lanzada desde su carpeta. AQP es el primer caso real del
   traspaso piloto → F19 (pendiente abierto: formato de entrega).
 
+### Sesión 2026-10-08 — Reunión #3 con AQP
+
+| Bloque | Dónde | Qué cambió |
+|---|---|---|
+| Notas R#3 | `entradas/reunion-3.md` (fuente: Notas de Gemini 08-10 + correcciones de Paula) | Se cerró: **precio US$2.950 + IVA por litro** (incluye acompañamiento; Gemini anotó "950 pesos"); **costo total del baño ≈US$4.000 por jaula** (≈US$1.000 son maniobras externas: HH, buzos, mallas); **permisos = autorización de Directemar por cada producto**; competidor **Sudvet** (Lyptus Plus®, Rosseus Plus® en baño; Aware Plus® oral); **cartas de interés** de los clientes actuales; mortalidad 0,01–0,02%; derechos cedidos por Aquacon. Etapa Crea de 6 meses = propuesta, se define con la Gantt. |
+| Dosis efectiva | `entradas/datos-comerciales.md` | Revisadas las transcripciones de formulación Ley I+D (22-05, 05-06, 12-06): no hay un dato explícito. Inconsistencia ppm/ppb: 0,1–0,2 ppm ≈ 1 L por jaula, que cuadra con el precio. **Confirmar con Claudio.** |
+| Correo post-reunión | redactado en la conversación; Paula lo envía con la ppt en PDF y la tabla de Hugo en un doc de la carpeta de reuniones | Pedidos para R#4: avances técnicos (Claudio, Rodrigo, Cristian), resumen de Aquaprime (Rodrigo), tabla de Hugo (2025 real · 2026 estimado · 2027–2029 de Aquaprime 1.0). |
+| Bitácora | `BITACORA-metodologia.md` (commit e76d737) | Aprendizajes 12–14: lámina de cifras a confirmar + revisar las notas automáticas; preguntar el costo total para el cliente; pedir los datos financieros en tabla. |
+
 ### Pendiente
-1. **Reunión #3 (08-10, 15:00)** con la presentación y el lienzo. Cerrar la franja CORFO,
-   la carta de interés (Cermaq/GMT) y el canal del oral. Pedir **proyecciones de Aquaprime 1.0**
-   y la **presentación técnica** para el 15-10. Después, enviar el resumen de cifras para que
-   AQP lo confirme por escrito.
-   Plan por semanas en la lámina 16 de la presentación: perfil de proyecto en S5–S7 (desde el 10-11), formulación en S9–S12.
-   Pedir además: licencia de la patente (Aquacon) y fase nacional, informes de ensayo, gráfico ventas vs. baños, carta de evaluación ANID.
+1. **Reunión #4 (jueves 15-10, 15:00–16:00).** AQP presenta los avances técnicos de la Ley I+D
+   (prototipos, eficacia, ensayos, estado a mar-27 → TRL) y el estado de la Gantt; Rodrigo trae
+   el resumen de Aquaprime; Hugo envía la tabla de datos. Preguntar a Claudio la **dosis efectiva**
+   (ppm/ppb, volumen del baño, litros por jaula). Explicación del ensayo de 5 meses con Fernanda.
+   Con eso se cierra el levantamiento; la semana siguiente parte la formulación (Gantt → formulario).
+   Siguen pendientes: contrato de cesión/licencia de la patente (Aquacon), informes de ensayo,
+   gráfico ventas vs. baños, carta de evaluación ANID, canal y precio del oral, fichas de Sudvet.
    Confirmar en las bases técnicas CyV 2026 (Res. 388) las fechas del perfil.
+   **Insumo para F19** después de la R#4: Gantt, TRL, cruce 4.3–4.5 ↔ CyV.
 2. **Correr el flujo con AQP** (`orquesta aqp`) cuando lleguen los datos. Verificar una por una
    las cifras heredadas de la Ley I+D antes de usarlas.
 3. **Procedimiento escrito v0** (después de AQP): objetivo y alcance · etapas · banco de
